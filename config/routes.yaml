@@ -1,0 +1,10 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+api_v1_query:
+    path: /api/v1/query
+    methods: POST
+    controller: sgoranov\PHPIdentityLinkShared\Controller\QueryController::query

@@ -1,0 +1,49 @@
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # Makes sgoranov\PHPIdentityLinkShared services available
+    sgoranov\PHPIdentityLinkShared\:
+        resource: '../vendor/sgoranov/php-identity-link-shared/src/*'
+
+    sgoranov\PHPIdentityLinkShared\Security\AccessTokenHandler:
+        calls:
+            - method: setConfigurationParams
+              arguments:
+                  - '%env(JWT_JWKS_URI)%'
+                  - '%env(JWT_ISSUER)%'
+                  - '%env(JWT_GROUPS_CLAIM)%'
+                  - '%env(JWT_ROLE_ADMIN)%'
+
+    sgoranov\PHPIdentityLinkShared\Api\DTO\AbstractQueryRequest:
+        alias: App\Api\DTO\Query\QueryRequest
+
+    sgoranov\PHPIdentityLinkShared\Api\DoctrineEntityType:
+        alias: App\Enum\EntityType
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+
+#    Symfony\Component\Serializer\Normalizer\DateTimeNormalizer:
+#        class: Symfony\Component\Serializer\Normalizer\DateTimeNormalizer
+#        arguments:
+#            - { 'format': 'Y-m-d H:i:s' }

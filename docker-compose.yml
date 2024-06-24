@@ -1,0 +1,44 @@
+version: '3.5'
+services:
+
+  db-clients:
+    container_name: db-clients
+    privileged: true
+    build:
+      context: ${PHP_IDENTITY_LINK_DB_CLIENTS_SOURCE_DIR}
+    ports:
+      - 9002:80
+    volumes:
+      - ${PHP_IDENTITY_LINK_DB_CLIENTS_SOURCE_DIR}:/var/www
+    extra_hosts:
+      - host.docker.internal:${HOST_GW:-host-gateway}
+    depends_on:
+      - database-server
+    networks:
+      - my-network
+
+  database-server:
+    container_name: database-server
+    image: postgres:10
+    restart: always
+    ports:
+      - "9006:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+    networks:
+      - my-network
+
+  adminer:
+    image: adminer
+    restart: always
+    environment:
+      ADMINER_DEFAULT_SERVER: database-server
+    ports:
+      - 9005:8080
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    driver: bridge
