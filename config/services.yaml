@@ -47,3 +47,7 @@ services:
 #        class: Symfony\Component\Serializer\Normalizer\DateTimeNormalizer
 #        arguments:
 #            - { 'format': 'Y-m-d H:i:s' }
+
+    sgoranov\PHPIdentityLinkShared\EventListener\RequestResponseLogger:
+        arguments:
+            $logger: '@monolog.logger.rest'
