@@ -11,7 +11,6 @@ use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Attribute\When;
 
 #[When(env: "test")]
-#[When(env: "dev")]
 class AppFixtures extends Fixture
 {
     const GROUP_NAME = 'test_group';

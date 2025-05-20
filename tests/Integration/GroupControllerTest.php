@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Tests\Application;
+namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
 use App\Repository\GroupRepository;

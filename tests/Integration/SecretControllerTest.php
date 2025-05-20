@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Tests\Application;
+namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
 use App\Repository\ClientRepository;

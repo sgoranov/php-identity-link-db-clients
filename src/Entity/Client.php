@@ -50,7 +50,7 @@ class Client
         maxMessage: 'You cannot specify more than {{ limit }} groups',
         groups: ['create', 'update']
     )]
-    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: "client")]
+    #[ORM\ManyToMany(targetEntity: Group::class, inversedBy: "clients")]
     #[ORM\JoinTable(name: "client_group")]
     private Collection $groups;
 

@@ -30,7 +30,7 @@ class Group
     private string $name;
 
     #[Ignore]
-    #[ORM\ManyToMany(targetEntity: Client::class, inversedBy: "groups")]
+    #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: "groups")]
     #[ORM\JoinTable(name: "client_group")]
     private Collection $clients;
 

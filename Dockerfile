@@ -24,10 +24,6 @@ RUN apt-get update && apt-get -y upgrade && DEBIAN_FRONTEND=noninteractive apt-g
     php-curl \
     composer
 
-ENV PGHOST database-server
-ENV PGUSER admin
-ENV PGPASSWORD admin
-
 # Apache configuration
 RUN a2enmod rewrite
 RUN a2enmod actions
