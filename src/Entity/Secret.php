@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\SecretRepository;
-use sgoranov\PHPIdentityLinkShared\Security\PasswordHashGenerator;
+use sgoranov\IdentityLinkShared\Security\PasswordHashGenerator;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Doctrine\ORM\Mapping as ORM;

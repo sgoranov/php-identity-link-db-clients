@@ -1,5 +1,5 @@
 {
-    "name": "sgoranov/php-identity-link-db-clients",
+    "name": "sgoranov/identity-link-db-clients",
     "type": "project",
     "license": "MIT",
     "minimum-stability": "dev",
@@ -11,7 +11,7 @@
         "doctrine/doctrine-bundle": "^2.11",
         "doctrine/doctrine-migrations-bundle": "^3.3",
         "doctrine/orm": "^2.17",
-        "sgoranov/php-identity-link-shared": "*",
+        "sgoranov/identity-link-shared": "*",
         "symfony/cache": "6.4.*",
         "symfony/console": "6.4.*",
         "symfony/dotenv": "6.4.*",
@@ -86,7 +86,7 @@
     "repositories": [
         {
             "type": "vcs",
-            "url": "https://github.com/sgoranov/php-identity-link-shared"
+            "url": "https://github.com/sgoranov/identity-link-shared"
         }
     ]
 }

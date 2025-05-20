@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Group;
-use sgoranov\PHPIdentityLinkShared\Serializer\Deserializer;
+use sgoranov\IdentityLinkShared\Serializer\Deserializer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

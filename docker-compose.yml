@@ -1,15 +1,14 @@
-version: '3.5'
 services:
 
   db-clients:
     container_name: db-clients
     privileged: true
     build:
-      context: ${PHP_IDENTITY_LINK_DB_CLIENTS_SOURCE_DIR}
+      context: ${IDENTITY_LINK_DB_CLIENTS_SOURCE_DIR}
     ports:
       - 9002:80
     volumes:
-      - ${PHP_IDENTITY_LINK_DB_CLIENTS_SOURCE_DIR}:/var/www
+      - ${IDENTITY_LINK_DB_CLIENTS_SOURCE_DIR}:/var/www
     extra_hosts:
       - host.docker.internal:${HOST_GW:-host-gateway}
     depends_on:

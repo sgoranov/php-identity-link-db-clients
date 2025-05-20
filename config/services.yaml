@@ -11,11 +11,11 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
-    # Makes sgoranov\PHPIdentityLinkShared services available
-    sgoranov\PHPIdentityLinkShared\:
-        resource: '../vendor/sgoranov/php-identity-link-shared/src/*'
+    # Makes sgoranov\IdentityLinkShared services available
+    sgoranov\IdentityLinkShared\:
+        resource: '../vendor/sgoranov/identity-link-shared/src/*'
 
-    sgoranov\PHPIdentityLinkShared\Security\AccessTokenHandler:
+    sgoranov\IdentityLinkShared\Security\AccessTokenHandler:
         calls:
             - method: setConfigurationParams
               arguments:
@@ -24,10 +24,10 @@ services:
                   - '%env(JWT_GROUPS_CLAIM)%'
                   - '%env(JWT_ROLE_ADMIN)%'
 
-    sgoranov\PHPIdentityLinkShared\Api\DTO\AbstractQueryRequest:
+    sgoranov\IdentityLinkShared\Api\DTO\AbstractQueryRequest:
         alias: App\Api\DTO\Query\QueryRequest
 
-    sgoranov\PHPIdentityLinkShared\Api\DoctrineEntityType:
+    sgoranov\IdentityLinkShared\Api\DoctrineEntityType:
         alias: App\Enum\EntityType
 
     # makes classes in src/ available to be used as services
@@ -48,6 +48,6 @@ services:
 #        arguments:
 #            - { 'format': 'Y-m-d H:i:s' }
 
-    sgoranov\PHPIdentityLinkShared\EventListener\RequestResponseLogger:
+    sgoranov\IdentityLinkShared\EventListener\RequestResponseLogger:
         arguments:
             $logger: '@monolog.logger.rest'

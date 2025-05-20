@@ -6,7 +6,7 @@ namespace App\Controller;
 use App\Api\DTO\Client\AuthRequest;
 use App\Entity\Client;
 use App\Repository\ClientRepository;
-use sgoranov\PHPIdentityLinkShared\Serializer\Deserializer;
+use sgoranov\IdentityLinkShared\Serializer\Deserializer;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

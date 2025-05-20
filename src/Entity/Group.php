@@ -5,7 +5,7 @@ namespace App\Entity;
 
 use App\Repository\GroupRepository;
 use Doctrine\Common\Collections\Collection;
-use sgoranov\PHPIdentityLinkShared\Validator\UniqueEntry;
+use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;

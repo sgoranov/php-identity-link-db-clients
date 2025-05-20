@@ -7,9 +7,9 @@ controllers:
 api_v1_ping:
     path: /api/v1/ping
     methods: GET
-    controller: sgoranov\PHPIdentityLinkShared\Controller\PingController::ping
+    controller: sgoranov\IdentityLinkShared\Controller\PingController::ping
 
 api_v1_query:
     path: /api/v1/query
     methods: POST
-    controller: sgoranov\PHPIdentityLinkShared\Controller\QueryController::query
+    controller: sgoranov\IdentityLinkShared\Controller\QueryController::query
