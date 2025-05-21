@@ -22,7 +22,7 @@ services:
 
   database-server:
     container_name: database-server
-    image: postgres:10
+    image: postgres:15
     restart: always
     ports:
       - "9006:5432"
