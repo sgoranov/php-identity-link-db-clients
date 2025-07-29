@@ -17,12 +17,9 @@ services:
 
     sgoranov\IdentityLinkShared\Security\AccessTokenHandler:
         calls:
-            - method: setConfigurationParams
+            - method: setUri
               arguments:
                   - '%env(JWT_JWKS_URI)%'
-                  - '%env(JWT_ISSUER)%'
-                  - '%env(JWT_GROUPS_CLAIM)%'
-                  - '%env(JWT_ROLE_ADMIN)%'
 
     sgoranov\IdentityLinkShared\Api\DTO\AbstractQueryRequest:
         alias: App\Api\DTO\Query\QueryRequest
@@ -38,15 +35,6 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
-
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
-
-
-#    Symfony\Component\Serializer\Normalizer\DateTimeNormalizer:
-#        class: Symfony\Component\Serializer\Normalizer\DateTimeNormalizer
-#        arguments:
-#            - { 'format': 'Y-m-d H:i:s' }
 
     sgoranov\IdentityLinkShared\EventListener\RequestResponseLogger:
         arguments:
