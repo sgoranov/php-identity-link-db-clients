@@ -1,0 +1,522 @@
+openapi: 3.0.0
+info:
+  title: 'Identity Link DB Client API'
+  description: 'API documentation for Identity Link DB Clients'
+  version: '1.0'
+servers:
+  -
+    url: /clients
+    description: 'Clients API base path'
+paths:
+  '/api/v1/client/{id}':
+    get:
+      tags:
+        - Client
+      summary: 'Fetch client by ID'
+      operationId: 89a0942ff9bbb8a613fa8d7dd83cea98
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Client data'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { client: { $ref: '#/components/schemas/Client' } }, type: object }
+                type: object
+        '404':
+          description: 'Client not found'
+    put:
+      tags:
+        - Client
+      summary: 'Update an existing client'
+      operationId: a09a41f84e0553f62606f7321aa2630d
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        '200':
+          description: 'Client updated'
+        '400':
+          description: 'Validation error'
+        '404':
+          description: 'Client not found'
+    delete:
+      tags:
+        - Client
+      summary: 'Delete a client'
+      operationId: abbd567f9c2a110cc65366d0ea074041
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'Client deleted'
+        '404':
+          description: 'Client not found'
+  /api/v1/client:
+    post:
+      tags:
+        - Client
+      summary: 'Create a new client'
+      operationId: c99cfa38ce2e45b3d06d47e842a63e22
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Client'
+      responses:
+        '201':
+          description: 'Client created'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { client: { $ref: '#/components/schemas/Client' } }, type: object }
+                type: object
+        '400':
+          description: 'Validation error'
+  /api/v1/auth:
+    post:
+      tags:
+        - Client
+      summary: 'Authenticate client'
+      operationId: 6cfe2f02ca10fe11f588bc9198083632
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRequest'
+      responses:
+        '200':
+          description: 'Authentication successful'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { client: { $ref: '#/components/schemas/Client' } }, type: object }
+                type: object
+        '400':
+          description: 'Authentication failed'
+  '/api/v1/group/{id}':
+    get:
+      tags:
+        - Group
+      summary: 'Fetch group by ID'
+      operationId: e2c2224b9b2f903289a17b663901df6a
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Group data'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { group: { $ref: '#/components/schemas/Group' } }, type: object }
+                type: object
+        '404':
+          description: 'Group not found'
+    put:
+      tags:
+        - Group
+      summary: 'Update an existing group'
+      operationId: 42f7c9ed90b6cf967e534a20b9e73b83
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        '200':
+          description: 'Group updated'
+        '400':
+          description: 'Validation error'
+        '404':
+          description: 'Group not found'
+    delete:
+      tags:
+        - Group
+      summary: 'Delete a group'
+      operationId: 259005a9fc55a4cd03440ec4bd7c041c
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'Group deleted'
+        '404':
+          description: 'Group not found'
+  /api/v1/group:
+    post:
+      tags:
+        - Group
+      summary: 'Create a new group'
+      operationId: 5d7927e8098b67ebba6c39dad87fcd8e
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Group'
+      responses:
+        '201':
+          description: 'Group created'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { group: { $ref: '#/components/schemas/Group' } }, type: object }
+                type: object
+        '400':
+          description: 'Validation error'
+  /api/v1/query:
+    post:
+      tags:
+        - Query
+      summary: 'Query any entity (Client, Group, Secret, etc.)'
+      operationId: 57dd80fe5a19f04a5c0d09ba5982bc1a
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: 'Query result'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { result: { type: array, items: { type: object } }, hasMore: { type: boolean } }, type: object }
+                type: object
+  '/api/v1/secret/{id}':
+    get:
+      tags:
+        - Secret
+      summary: 'Fetch a secret by ID'
+      operationId: e58aa4c5257e6adaf1725fa00a868607
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: 'Secret data'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { secret: { $ref: '#/components/schemas/Secret' } }, type: object }
+                type: object
+        '404':
+          description: 'Secret not found'
+    put:
+      tags:
+        - Secret
+      summary: 'Update a secret'
+      operationId: 66c6bc194517834467470e74919de24c
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+      responses:
+        '200':
+          description: 'Secret updated'
+        '400':
+          description: 'Validation error'
+        '404':
+          description: 'Secret not found'
+    delete:
+      tags:
+        - Secret
+      summary: 'Delete a secret'
+      operationId: 34891b38848eaa843ba394e3bd030c94
+      parameters:
+        -
+          name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: 'Secret deleted'
+        '404':
+          description: 'Secret not found'
+  /api/v1/secret:
+    post:
+      tags:
+        - Secret
+      summary: 'Create a new secret'
+      operationId: 8879a9a5a5308c0868311de389e06560
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Secret'
+      responses:
+        '201':
+          description: 'Secret created (password omitted)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { secret: { $ref: '#/components/schemas/Secret' } }, type: object }
+                type: object
+        '400':
+          description: 'Validation error'
+components:
+  schemas:
+    AuthRequest:
+      title: AuthRequest
+      description: 'DTO for client authentication request'
+      required:
+        - name
+        - secret
+      properties:
+        name:
+          description: 'Client name'
+          type: string
+          maxLength: 200
+          minLength: 1
+        secret:
+          description: 'Client secret'
+          type: string
+          maxLength: 200
+          minLength: 1
+        grantType:
+          description: 'OAuth2 grant type'
+          type: string
+          enum:
+            - client_credentials
+            - password
+            - authorization_code
+            - refresh_token
+            - implicit
+          nullable: true
+      type: object
+    QueryRequest:
+      title: 'Query Request'
+      description: 'Request body for generic entity querying'
+      required:
+        - type
+      properties:
+        type:
+          description: 'The entity type being queried (e.g., "Client", "Group", "Secret")'
+          type: string
+          example: Group
+        alias:
+          description: 'Alias used in the query builder'
+          type: string
+          default: t
+          example: t
+        query:
+          description: 'DQL-compatible where clause, e.g., "t.name = :name"'
+          type: string
+          example: 'c.name = :name'
+          nullable: true
+        joins:
+          description: 'Joins to perform (DQL-style)'
+          type: object
+          example:
+            c: t.clients
+          nullable: true
+          additionalProperties: true
+        orderBy:
+          description: 'Ordering of results'
+          type: object
+          example:
+            t.name: ASC
+          nullable: true
+          additionalProperties: true
+        parameters:
+          description: 'Parameters used in query, used with query string placeholders'
+          type: object
+          example:
+            name: myclient
+          nullable: true
+          additionalProperties: true
+        limit:
+          description: 'Maximum number of results to return'
+          type: integer
+          format: int32
+          example: 15
+        offset:
+          description: 'Number of records to skip'
+          type: integer
+          format: int32
+          example: 0
+      type: object
+    Client:
+      title: Client
+      description: 'OAuth2 Client entity used for identity link authorization'
+      properties:
+        id:
+          description: 'Client UUID'
+          type: string
+          format: uuid
+        name:
+          description: 'Unique client name'
+          type: string
+          maxLength: 100
+        description:
+          description: 'Client description'
+          type: string
+          maxLength: 3000
+        redirectUri:
+          description: 'Client redirect URI'
+          type: string
+          format: uri
+          maxLength: 3000
+        grantTypes:
+          description: 'Allowed OAuth2 grant types'
+          type: array
+          items:
+            type: string
+            enum:
+              - client_credentials
+              - password
+              - authorization_code
+              - refresh_token
+              - implicit
+        scopes:
+          description: 'OAuth2 scopes for the client'
+          type: array
+          items:
+            type: string
+        groups:
+          description: 'Group IDs assigned to the client'
+          type: array
+          items:
+            type: string
+        secrets:
+          description: 'Secret keys associated with the client'
+          type: array
+          items:
+            type: string
+        isPublic:
+          description: 'Indicates whether the client is public'
+          type: boolean
+      type: object
+    Group:
+      title: Group
+      description: 'Permission or access group that can be assigned to clients.'
+      required:
+        - name
+      properties:
+        id:
+          description: 'Unique identifier for the group'
+          type: string
+          format: uuid
+        name:
+          description: 'Group name (must be unique)'
+          type: string
+          maxLength: 100
+      type: object
+    Secret:
+      title: Secret
+      description: "Represents a client's secret, including password hint and expiration info."
+      properties:
+        id:
+          description: 'Unique identifier of the secret'
+          type: string
+          format: uuid
+        password:
+          description: 'Plaintext password (write-only)'
+          type: string
+          maxLength: 50
+          writeOnly: true
+        passwordHint:
+          description: 'Hint to help recall the password'
+          type: string
+          maxLength: 500
+        expirationDateTime:
+          description: 'Expiration timestamp for the secret'
+          type: string
+          format: date-time
+        client:
+          $ref: '#/components/schemas/Client'
+      type: object
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: 'JWT Bearer token authorization'
+      bearerFormat: JWT
+      scheme: bearer
+security:
+  -
+    bearerAuth: []
+tags:
+  -
+    name: Client
+  -
+    name: Secret
+  -
+    name: Group
+    description: Group
+  -
+    name: Query
+    description: Query

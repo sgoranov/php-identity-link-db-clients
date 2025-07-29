@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Entity\Group;
 use sgoranov\IdentityLinkShared\Serializer\Deserializer;
 use Doctrine\ORM\EntityManagerInterface;
+use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -26,6 +27,38 @@ final class GroupController extends AbstractController
     }
 
     #[Route('/group/{id}', name: 'fetch_group', methods: 'GET')]
+    #[OA\Get(
+        path: '/api/v1/group/{id}',
+        summary: 'Fetch group by ID',
+        tags: ['Group'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Group data',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(property: 'group', ref: '#/components/schemas/Group')
+                            ],
+                            type: 'object'
+                        )
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 404, description: 'Group not found')
+        ]
+    )]
     public function fetch(#[MapEntity(id: 'id')] Group $group): Response
     {
         return new JsonResponse([
@@ -34,6 +67,34 @@ final class GroupController extends AbstractController
     }
 
     #[Route('/group', name: 'create_group', methods: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/group',
+        summary: 'Create a new group',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/Group')
+        ),
+        tags: ['Group'],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Group created',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(property: 'group', ref: '#/components/schemas/Group')
+                            ],
+                            type: 'object'
+                        )
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 400, description: 'Validation error')
+        ]
+    )]
     public function create(): Response
     {
         $group = new Group();
@@ -50,6 +111,28 @@ final class GroupController extends AbstractController
     }
 
     #[Route('/group/{id}', name: 'update_group', methods: 'PUT')]
+    #[OA\Put(
+        path: '/api/v1/group/{id}',
+        summary: 'Update an existing group',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/Group')
+        ),
+        tags: ['Group'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            )
+        ],
+        responses: [
+            new OA\Response(response: 200, description: 'Group updated'),
+            new OA\Response(response: 400, description: 'Validation error'),
+            new OA\Response(response: 404, description: 'Group not found')
+        ]
+    )]
     public function update(#[MapEntity(id: 'id')] Group $group): Response
     {
         if (!$this->deserializer->deserialize($group, ['update'])) {
@@ -65,6 +148,23 @@ final class GroupController extends AbstractController
     }
 
     #[Route('/group/{id}', name: 'delete_group', methods: 'DELETE')]
+    #[OA\Delete(
+        path: '/api/v1/group/{id}',
+        summary: 'Delete a group',
+        tags: ['Group'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            )
+        ],
+        responses: [
+            new OA\Response(response: 204, description: 'Group deleted'),
+            new OA\Response(response: 404, description: 'Group not found')
+        ]
+    )]
     public function delete(#[MapEntity(id: 'id')] Group $group): Response
     {
         $this->entityManager->remove($group);

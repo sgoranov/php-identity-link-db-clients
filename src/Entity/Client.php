@@ -9,11 +9,76 @@ use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use OpenApi\Attributes as OA;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: ClientRepository::class)]
 #[ORM\Table(name: 'client')]
+#[OA\Schema(
+    schema: "Client",
+    title: "Client",
+    description: "OAuth2 Client entity used for identity link authorization",
+    properties: [
+        new OA\Property(
+            property: "id",
+            description: "Client UUID",
+            type: "string",
+            format: "uuid"
+        ),
+        new OA\Property(
+            property: "name",
+            description: "Unique client name",
+            type: "string",
+            maxLength: 100
+        ),
+        new OA\Property(
+            property: "description",
+            description: "Client description",
+            type: "string",
+            maxLength: 3000
+        ),
+        new OA\Property(
+            property: "redirectUri",
+            description: "Client redirect URI",
+            type: "string",
+            format: "uri",
+            maxLength: 3000
+        ),
+        new OA\Property(
+            property: "grantTypes",
+            description: "Allowed OAuth2 grant types",
+            type: "array",
+            items: new OA\Items(
+                type: "string",
+                enum: ["client_credentials", "password", "authorization_code", "refresh_token", "implicit"]
+            )
+        ),
+        new OA\Property(
+            property: "scopes",
+            description: "OAuth2 scopes for the client",
+            type: "array",
+            items: new OA\Items(type: "string")
+        ),
+        new OA\Property(
+            property: "groups",
+            description: "Group IDs assigned to the client",
+            type: "array",
+            items: new OA\Items(type: "string")
+        ),
+        new OA\Property(
+            property: "secrets",
+            description: "Secret keys associated with the client",
+            type: "array",
+            items: new OA\Items(type: "string")
+        ),
+        new OA\Property(
+            property: "isPublic",
+            description: "Indicates whether the client is public",
+            type: "boolean"
+        )
+    ]
+)]
 class Client
 {
     #[ORM\Id]

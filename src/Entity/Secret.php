@@ -9,9 +9,47 @@ use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
+use OpenApi\Attributes as OA;
 
 #[ORM\Entity(repositoryClass: SecretRepository::class)]
 #[ORM\Table(name: 'secret')]
+#[OA\Schema(
+    schema: "Secret",
+    title: "Secret",
+    description: "Represents a client's secret, including password hint and expiration info.",
+    properties: [
+        new OA\Property(
+            property: "id",
+            description: "Unique identifier of the secret",
+            type: "string",
+            format: "uuid"
+        ),
+        new OA\Property(
+            property: "password",
+            description: "Plaintext password (write-only)",
+            type: "string",
+            maxLength: 50,
+            writeOnly: true
+        ),
+        new OA\Property(
+            property: "passwordHint",
+            description: "Hint to help recall the password",
+            type: "string",
+            maxLength: 500
+        ),
+        new OA\Property(
+            property: "expirationDateTime",
+            description: "Expiration timestamp for the secret",
+            type: "string",
+            format: "date-time"
+        ),
+        new OA\Property(
+            property: "client",
+            ref: "#/components/schemas/Client",
+            description: "Client to which the secret belongs"
+        )
+    ]
+)]
 class Secret
 {
     #[ORM\Id]

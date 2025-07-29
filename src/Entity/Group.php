@@ -7,12 +7,33 @@ use App\Repository\GroupRepository;
 use Doctrine\Common\Collections\Collection;
 use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\ORM\Mapping as ORM;
+use OpenApi\Attributes as OA;
 use Symfony\Component\Serializer\Annotation\Groups;
 use Symfony\Component\Serializer\Attribute\Ignore;
 use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: GroupRepository::class)]
 #[ORM\Table(name: '`group`')]
+#[OA\Schema(
+    schema: "Group",
+    title: "Group",
+    description: "Permission or access group that can be assigned to clients.",
+    required: ["name"],
+    properties: [
+        new OA\Property(
+            property: "id",
+            description: "Unique identifier for the group",
+            type: "string",
+            format: "uuid"
+        ),
+        new OA\Property(
+            property: "name",
+            description: "Group name (must be unique)",
+            type: "string",
+            maxLength: 100
+        )
+    ]
+)]
 class Group
 {
     #[ORM\Id]

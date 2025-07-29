@@ -9,7 +9,7 @@ api_v1_ping:
     methods: GET
     controller: sgoranov\IdentityLinkShared\Controller\PingController::ping
 
-api_v1_query:
-    path: /api/v1/query
-    methods: POST
-    controller: sgoranov\IdentityLinkShared\Controller\QueryController::query
+openapi_yaml:
+    path: /api/v1/openapi.yaml
+    methods: GET
+    controller: sgoranov\IdentityLinkShared\Controller\OpenApiController::openapi
