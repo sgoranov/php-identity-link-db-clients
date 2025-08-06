@@ -8,6 +8,42 @@ servers:
     url: /clients
     description: 'Clients API base path'
 paths:
+  /api/v1/ping:
+    get:
+      tags:
+        - Health
+      summary: 'Health check endpoint'
+      description: "Returns 'pong' if the service is alive."
+      operationId: f7321c7b9286ff2f1842754f388964b4
+      responses:
+        '200':
+          description: 'Pong response'
+          content:
+            application/json:
+              schema:
+                type: string
+              example: pong
+  /api/v1/query:
+    post:
+      tags:
+        - Query
+      summary: 'Query any entity (Client, Group, Secret, etc.)'
+      operationId: 8e55723842f105588b6d12bd689d80bc
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueryRequest'
+      responses:
+        '200':
+          description: 'Query result'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { result: { type: array, items: { type: object } }, hasMore: { type: boolean } }, type: object }
+                type: object
   '/api/v1/client/{id}':
     get:
       tags:
@@ -215,27 +251,6 @@ paths:
                 type: object
         '400':
           description: 'Validation error'
-  /api/v1/query:
-    post:
-      tags:
-        - Query
-      summary: 'Query any entity (Client, Group, Secret, etc.)'
-      operationId: 57dd80fe5a19f04a5c0d09ba5982bc1a
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/QueryRequest'
-      responses:
-        '200':
-          description: 'Query result'
-          content:
-            application/json:
-              schema:
-                properties:
-                  response: { properties: { result: { type: array, items: { type: object } }, hasMore: { type: boolean } }, type: object }
-                type: object
   '/api/v1/secret/{id}':
     get:
       tags:
@@ -511,12 +526,16 @@ security:
     bearerAuth: []
 tags:
   -
-    name: Client
-  -
     name: Secret
+  -
+    name: Client
+    description: Client
   -
     name: Group
     description: Group
+  -
+    name: Health
+    description: Health
   -
     name: Query
     description: Query

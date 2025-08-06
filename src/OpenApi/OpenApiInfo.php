@@ -33,6 +33,61 @@ use OpenApi\Attributes as OA;
         ]
     )
 )]
+#[OA\PathItem(
+    path: "/api/v1/ping",
+    get: new OA\Get(
+        description: "Returns 'pong' if the service is alive.",
+        summary: "Health check endpoint",
+        tags: ["Health"],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: "Pong response",
+                content: new OA\JsonContent(
+                    type: "string",
+                    example: "pong"
+                )
+            )
+        ]
+    )
+)]
+#[OA\PathItem(
+    path: '/api/v1/query',
+    post: new OA\Post(
+        summary: 'Query any entity (Client, Group, Secret, etc.)',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(ref: '#/components/schemas/QueryRequest')
+        ),
+        tags: ['Query'],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Query result',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(
+                                    property: 'result',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'object')
+                                ),
+                                new OA\Property(
+                                    property: 'hasMore',
+                                    type: 'boolean'
+                                )
+                            ],
+                            type: 'object'
+                        )
+                    ],
+                    type: 'object'
+                )
+            )
+        ]
+    )
+)]
 final class OpenApiInfo
 {
 }
