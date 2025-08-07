@@ -10,14 +10,13 @@ use Symfony\Component\Validator\Constraints as Assert;
     schema: "AuthRequest",
     title: "AuthRequest",
     description: "DTO for client authentication request",
-    required: ["name", "secret"],
+    required: ["id", "secret"],
     properties: [
         new OA\Property(
-            property: "name",
-            description: "Client name",
+            property: "id",
+            description: "Unique identifier of the client",
             type: "string",
-            maxLength: 200,
-            minLength: 1
+            format: "uuid"
         ),
         new OA\Property(
             property: "secret",
@@ -38,8 +37,8 @@ use Symfony\Component\Validator\Constraints as Assert;
 class AuthRequest
 {
     #[Assert\NotBlank]
-    #[Assert\Length(min: 1, max: 200)]
-    public string $name;
+    #[Assert\Uuid(message: 'The ID must be a valid UUID.')]
+    public string $id;
 
     #[Assert\NotBlank]
     #[Assert\Length(min: 1, max: 200)]
@@ -48,14 +47,14 @@ class AuthRequest
     #[Assert\Choice(['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit'])]
     public ?string $grantType = null;
 
-    public function getName(): string
+    public function getId(): string
     {
-        return $this->name;
+        return $this->id;
     }
 
-    public function setName(string $name): void
+    public function setId(string $id): void
     {
-        $this->name = $name;
+        $this->id = $id;
     }
 
     public function getSecret(): string

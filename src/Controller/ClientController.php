@@ -207,7 +207,7 @@ final class ClientController extends AbstractController
             return $this->deserializer->respondWithError();
         }
 
-        $client = $this->repository->getClientByNameAndSecret($authRequest->getName(),
+        $client = $this->repository->getClientByIdAndSecret($authRequest->getId(),
             $authRequest->getSecret(), $authRequest->getGrantType());
 
         if ($client === null) {

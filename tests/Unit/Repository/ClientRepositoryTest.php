@@ -23,21 +23,23 @@ class ClientRepositoryTest extends KernelTestCase
         self::$clientRepository = $container->get(ClientRepository::class);
     }
 
-    public function testGetClientByNameAndSecret(): void
+    public function testGetClientByIdAndSecret(): void
     {
-        $result = self::$clientRepository->getClientByNameAndSecret(
-            AppFixtures::CLIENT_NAME, AppFixtures::CLIENT_SECRET, 'client_credentials');
+        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = self::$clientRepository->getClientByIdAndSecret(
+            $client->getId(), AppFixtures::CLIENT_SECRET, 'client_credentials');
         $this->assertEquals(AppFixtures::CLIENT_NAME, $result->getName());
     }
 
-    public function testGetClientByNameAndSecretWithInvalidSecret(): void
+    public function testGetClientByIdAndSecretWithInvalidSecret(): void
     {
-        $result = self::$clientRepository->getClientByNameAndSecret(
-            AppFixtures::CLIENT_NAME, 'pass', 'client_credentials');
+        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = self::$clientRepository->getClientByIdAndSecret(
+            $client->getId(), 'pass', 'client_credentials');
         $this->assertNull($result);
     }
 
-    public function testGetClientByNameAndSecretWithExpiredSecret(): void
+    public function testGetClientByIdAndSecretWithExpiredSecret(): void
     {
         $currentDateTime = new \DateTime();
         $secret = self::$secretRepository->findOneBy(['passwordHint' => AppFixtures::CLIENT_SECRET_HINT]);
@@ -45,20 +47,22 @@ class ClientRepositoryTest extends KernelTestCase
         self::$entityManager->persist($secret);
         self::$entityManager->flush();
 
-        $result = self::$clientRepository->getClientByNameAndSecret(
-            AppFixtures::CLIENT_NAME, AppFixtures::CLIENT_SECRET, 'client_credentials');
+        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = self::$clientRepository->getClientByIdAndSecret(
+            $client->getId(), AppFixtures::CLIENT_SECRET, 'client_credentials');
         $this->assertNull($result);
     }
 
-    public function testGetClientByNameAndSecretWithInvalidGrantType()
+    public function testGetClientByIdAndSecretWithInvalidGrantType()
     {
         $client = self::$clientRepository->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
         $client->setGrantTypes(['password', 'authorization_code', 'refresh_token', 'implicit']);
         self::$entityManager->persist($client);
         self::$entityManager->flush();
 
-        $result = self::$clientRepository->getClientByNameAndSecret(
-            AppFixtures::CLIENT_NAME, AppFixtures::CLIENT_SECRET, 'client_credentials');
+        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = self::$clientRepository->getClientByIdAndSecret(
+            $client->getId(), AppFixtures::CLIENT_SECRET, 'client_credentials');
         $this->assertNull($result);
     }
 }

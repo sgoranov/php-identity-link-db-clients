@@ -349,14 +349,13 @@ components:
       title: AuthRequest
       description: 'DTO for client authentication request'
       required:
-        - name
+        - id
         - secret
       properties:
-        name:
-          description: 'Client name'
+        id:
+          description: 'Unique identifier of the client'
           type: string
-          maxLength: 200
-          minLength: 1
+          format: uuid
         secret:
           description: 'Client secret'
           type: string
