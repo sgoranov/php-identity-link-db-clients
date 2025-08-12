@@ -343,6 +343,40 @@ paths:
                 type: object
         '400':
           description: 'Validation error'
+  /api/v1/secret/issue:
+    post:
+      tags:
+        - Secret
+      summary: 'Issue a new secret (auto-generates password)'
+      operationId: 20fbd80731f67775bdfda89455d9565b
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              properties:
+                expirationPeriod:
+                  description: 'Relative expiration period'
+                  type: string
+                  enum: [1d, 1w, 1m, 3m, 9m, 1y, 2y]
+                client:
+                  $ref: '#/components/schemas/Client'
+                passwordHint:
+                  description: 'Optional hint to help recall the password'
+                  type: string
+                  maxLength: 500
+              type: object
+      responses:
+        '201':
+          description: 'Secret issued (password omitted)'
+          content:
+            application/json:
+              schema:
+                properties:
+                  response: { properties: { secret: { $ref: '#/components/schemas/Secret' } }, type: object }
+                type: object
+        '400':
+          description: 'Validation error'
 components:
   schemas:
     AuthRequest:

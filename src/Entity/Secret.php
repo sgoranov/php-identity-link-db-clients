@@ -62,16 +62,16 @@ class Secret
     #[ORM\Column(name: 'password', length: 100)]
     private string $hashedPassword;
 
-    #[Groups(['create'])]
+    #[Groups(['create', 'secret_issue_response'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Length(min: 1, max: 50, groups: ['create'])]
     private string $password;
 
-    #[Groups(['create', 'update', 'response_without_password'])]
+    #[Groups(['create', 'update', 'secret_issue_request', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[Assert\Length(min: 1, max: 500, groups: ['create', 'update'])]
     #[ORM\Column(length: 500)]
-    private string $passwordHint;
+    private ?string $passwordHint = null;
 
     #[Groups(['create', 'response_without_password'])]
     #[Assert\NotNull(groups: ['create'])]
@@ -79,7 +79,16 @@ class Secret
     #[ORM\Column]
     private \DateTime $expirationDateTime;
 
-    #[Groups(['create', 'response_without_password'])]
+    #[Groups(['secret_issue_request', 'secret_issue_response'])]
+    #[Assert\NotBlank(groups: ['secret_issue_request'])]
+    #[Assert\Choice(
+        choices: ['1d', '1w', '1m', '3m', '9m', '1y', '2y'],
+        message: 'Choose one of: 1d, 1w, 1m, 3m, 9m, 1y, 2y.',
+        groups: ['secret_issue_request']
+    )]
+    private ?string $expirationPeriod = null;
+
+    #[Groups(['create', 'secret_issue_request', 'response_without_password'])]
     #[Assert\NotBlank(groups: ['create'])]
     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'secrets')]
     private Client $client;
@@ -105,7 +114,7 @@ class Secret
         $this->hashedPassword = PasswordHashGenerator::create($password);
     }
 
-    public function getPasswordHint(): string
+    public function getPasswordHint(): ?string
     {
         return $this->passwordHint;
     }
@@ -123,6 +132,16 @@ class Secret
     public function setExpirationDateTime(\DateTime $expirationDateTime): void
     {
         $this->expirationDateTime = $expirationDateTime;
+    }
+
+    public function getExpirationPeriod(): ?string
+    {
+        return $this->expirationPeriod;
+    }
+
+    public function setExpirationPeriod(?string $expirationPeriod): void
+    {
+        $this->expirationPeriod = $expirationPeriod;
     }
 
     public function getClient(): Client

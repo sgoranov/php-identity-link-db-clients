@@ -178,4 +178,91 @@ final class SecretController extends AbstractController
 
         return new JsonResponse(null, Response::HTTP_NO_CONTENT);
     }
+
+    #[Route('/secret/issue', name: 'issue_secret', methods: 'POST')]
+    #[OA\Post(
+        path: '/api/v1/secret/issue',
+        summary: 'Issue a new secret (auto-generates password)',
+        requestBody: new OA\RequestBody(
+            required: true,
+            content: new OA\JsonContent(
+                properties: [
+                    new OA\Property(
+                        property: 'expirationPeriod',
+                        description: 'Relative expiration period',
+                        type: 'string',
+                        enum: ['1d', '1w', '1m', '3m', '9m', '1y', '2y']
+                    ),
+                    new OA\Property(
+                        property: 'client',
+                        ref: '#/components/schemas/Client',
+                        description: 'Client to which the secret belongs'
+                    ),
+                    new OA\Property(
+                        property: 'passwordHint',
+                        description: 'Optional hint to help recall the password',
+                        type: 'string',
+                        maxLength: 500
+                    )
+                ],
+                type: 'object'
+            )
+        ),
+        tags: ['Secret'],
+        responses: [
+            new OA\Response(
+                response: 201,
+                description: 'Secret issued (password omitted)',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(property: 'secret', ref: '#/components/schemas/Secret')
+                            ],
+                            type: 'object'
+                        )
+                    ],
+                    type: 'object'
+                )
+            ),
+            new OA\Response(response: 400, description: 'Validation error')
+        ]
+    )]
+    public function issue(): Response
+    {
+        $secret = new Secret();
+
+        if (!$this->deserializer->deserialize($secret, ['secret_issue_request'])) {
+            return $this->deserializer->respondWithError();
+        }
+
+        $secret->setPassword(bin2hex(random_bytes(32)));
+        if (!$secret->getPasswordHint()) {
+            $secret->setPasswordHint('auto generated');
+        }
+
+        $period = $secret->getExpirationPeriod();
+        $interval = new \DateInterval([
+            '1d' => 'P1D',
+            '1w' => 'P1W',
+            '1m' => 'P1M',
+            '3m' => 'P3M',
+            '9m' => 'P9M',
+            '1y' => 'P1Y',
+            '2y' => 'P2Y',
+        ][$period]);
+        $secret->setExpirationDateTime((new \DateTime())->add($interval));
+
+        $this->entityManager->persist($secret);
+        $this->entityManager->flush();
+
+        $context = (new ObjectNormalizerContextBuilder())
+            ->withGroups(['response_without_password', 'secret_issue_response'])
+            ->toArray();
+
+        return new JsonResponse([
+            'response' => ['secret' => json_decode($this->serializer->serialize($secret, 'json', $context))]
+        ], Response::HTTP_CREATED);
+    }
 }
