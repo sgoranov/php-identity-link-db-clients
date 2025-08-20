@@ -17,12 +17,14 @@ class ClientRepository extends ServiceEntityRepository
         $this->secretRepository = $secretRepository;
     }
 
-    public function getClientByIdAndSecret(string $id, string $clientSecret, string $grantType): ?Client
+    public function getClientByIdAndSecret(string $id, string $clientSecret, ?string $grantType = null): ?Client
     {
         $client = $this->findOneBy(['id' => $id]);
-        if (is_null($client) || !in_array($grantType, $client->getGrantTypes(), true)
-            || $client->isPublic() === true) {
+        if (is_null($client) || $client->isPublic()) {
+            return null;
+        }
 
+        if ($grantType !== null && !in_array($grantType, $client->getGrantTypes(), true)) {
             return null;
         }
 
