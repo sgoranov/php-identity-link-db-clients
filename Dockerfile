@@ -26,6 +26,7 @@ RUN apt-get update && apt-get -y upgrade && DEBIAN_FRONTEND=noninteractive apt-g
     php-xdebug \
     php-curl \
     php-zip \
+    php-redis \
     composer
 
 # Apache configuration
