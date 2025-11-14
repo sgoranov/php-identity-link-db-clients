@@ -52,7 +52,6 @@ class Group
 
     #[Ignore]
     #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: "groups")]
-    #[ORM\JoinTable(name: "client_group")]
     private Collection $clients;
 
     public function getId(): ?string
