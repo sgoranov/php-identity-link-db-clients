@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DoctrineMigrations;
 
 use Doctrine\DBAL\Schema\Schema;
+use Doctrine\DBAL\Platforms\PostgreSQLPlatform;
 use Doctrine\Migrations\AbstractMigration;
 
 /**
@@ -19,6 +20,11 @@ final class Version20240531124612 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
+        $this->abortIf(
+            !($this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform),
+            'This migration is only supported on PostgreSQL.'
+        );
+
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE TABLE client (id UUID NOT NULL, name VARCHAR(100) NOT NULL, description VARCHAR(3000) NOT NULL, redirect_uri VARCHAR(3000) NOT NULL, grant_types JSON NOT NULL, scopes JSON NOT NULL, is_public BOOLEAN NOT NULL, PRIMARY KEY(id))');
         $this->addSql('CREATE UNIQUE INDEX UNIQ_C74404555E237E06 ON client (name)');
@@ -41,6 +47,11 @@ final class Version20240531124612 extends AbstractMigration
 
     public function down(Schema $schema): void
     {
+        $this->abortIf(
+            !($this->connection->getDatabasePlatform() instanceof PostgreSQLPlatform),
+            'This migration is only supported on PostgreSQL.'
+        );
+
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql('CREATE SCHEMA public');
         $this->addSql('ALTER TABLE client_group DROP CONSTRAINT FK_CEADD87219EB6921');

@@ -40,10 +40,13 @@ use Symfony\Component\Validator\Constraints as Assert;
         ),
         new OA\Property(
             property: "redirectUri",
-            description: "Client redirect URI",
-            type: "string",
-            format: "uri",
-            maxLength: 3000
+            description: "Client redirect URIs",
+            type: "array",
+            items: new OA\Items(
+                type: "string",
+                format: "uri",
+                maxLength: 3000
+            )
         ),
         new OA\Property(
             property: "grantTypes",
@@ -102,11 +105,18 @@ class Client
     private string $description;
 
     #[Groups(['create', 'update'])]
-    #[Assert\NotBlank(groups: ['create'])]
-    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
-    #[Assert\Url(groups: ['create', 'update'])]
-    #[ORM\Column(length: 3000)]
-    private string $redirectUri;
+    #[Assert\Count(
+        min: 1,
+        max: 50,
+        maxMessage: 'You cannot specify more than {{ limit }} redirect URIs',
+        groups: ['create', 'update']
+    )]
+    #[Assert\All([
+        new Assert\Url(groups: ['create', 'update']),
+        new Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])
+    ])]
+    #[ORM\Column(name: 'redirect_uri', type: 'json')]
+    private array $redirectUri = [];
 
     #[Groups(['create', 'update'])]
     #[Assert\Count(
@@ -177,12 +187,12 @@ class Client
         $this->description = $description;
     }
 
-    public function getRedirectUri(): string
+    public function getRedirectUri(): array
     {
         return $this->redirectUri;
     }
 
-    public function setRedirectUri(string $redirectUri): void
+    public function setRedirectUri(array $redirectUri): void
     {
         $this->redirectUri = $redirectUri;
     }

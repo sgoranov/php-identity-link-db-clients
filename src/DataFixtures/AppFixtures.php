@@ -31,7 +31,7 @@ class AppFixtures extends Fixture
         $client->setDescription('private client');
         $client->setName(self::CLIENT_NAME);
         $client->setGrantTypes(['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit']);
-        $client->setRedirectUri('http://localhost/');
+        $client->setRedirectUri(['http://localhost/']);
         $manager->persist($client);
 
         $currentDateTime = new \DateTime();

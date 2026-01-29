@@ -475,10 +475,12 @@ components:
           type: string
           maxLength: 3000
         redirectUri:
-          description: 'Client redirect URI'
-          type: string
-          format: uri
-          maxLength: 3000
+          description: 'Client redirect URIs'
+          type: array
+          items:
+            type: string
+            format: uri
+            maxLength: 3000
         grantTypes:
           description: 'Allowed OAuth2 grant types'
           type: array

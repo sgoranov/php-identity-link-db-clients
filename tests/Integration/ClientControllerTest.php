@@ -34,7 +34,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => '',
             'description' => 'client description',
-            'redirectUri' => 'http://localhost/',
+            'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
         ];
@@ -57,7 +57,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => '&&%$',
             'description' => 'client description',
-            'redirectUri' => 'http://localhost/',
+            'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
         ];
@@ -80,7 +80,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => AppFixtures::CLIENT_NAME,
             'description' => 'client description',
-            'redirectUri' => 'http://localhost/',
+            'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
         ];
@@ -103,7 +103,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test',
             'description' => 'client description',
-            'redirectUri' => 'http://localhost/',
+            'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
         ];
