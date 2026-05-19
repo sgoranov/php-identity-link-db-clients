@@ -1,25 +1,11 @@
 #!/usr/bin/env bash
 
-cd /var/www/
+cd /app
 
-# Run composer install
-composer install --no-scripts
+composer install --no-interaction --no-scripts --no-progress
 
-# Database setup
-until psql -c "\q"; do sleep 3; done
-echo "SELECT 'CREATE DATABASE \"identity-link-db-clients\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\"identity-link-db-clients\"')\gexec" \
- | psql -v ON_ERROR_STOP=1
-php bin/console -e dev doctrine:migrations:migrate --no-interaction
-
-until psql -c "\q"; do sleep 3; done
-echo "SELECT 'CREATE DATABASE \"test-identity-link-db-clients\"' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = '\"test-identity-link-db-clients\"')\gexec" \
- | psql -v ON_ERROR_STOP=1
-php bin/console -e test doctrine:migrations:migrate --no-interaction
-php bin/console -e test -n doctrine:fixtures:load
-
-# Set correct permissions on var/
-rm -rf var/cache/*
-chmod -R o+rw var/
+php bin/console doctrine:database:create --if-not-exists --no-interaction --env=dev
+php bin/console doctrine:migrations:migrate --no-interaction --env=dev
 
 # This will exec the CMD from Dockerfile
 exec "$@"
