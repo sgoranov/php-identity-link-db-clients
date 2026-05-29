@@ -47,6 +47,12 @@ use OpenApi\Attributes as OA;
             property: "client",
             ref: "#/components/schemas/Client",
             description: "Client to which the secret belongs"
+        ),
+        new OA\Property(
+            property: "isSystem",
+            description: "Indicates whether the secret is managed by the system and cannot be updated or deleted through the API",
+            type: "boolean",
+            readOnly: true
         )
     ]
 )]
@@ -92,6 +98,10 @@ class Secret
     #[Assert\NotBlank(groups: ['create'])]
     #[ORM\ManyToOne(targetEntity: Client::class, inversedBy: 'secrets')]
     private Client $client;
+
+    #[Groups(['response_without_password', 'secret_issue_response'])]
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isSystem = false;
 
     public function getId(): ?string
     {
@@ -152,5 +162,10 @@ class Secret
     public function setClient(Client $client): void
     {
         $this->client = $client;
+    }
+
+    public function getIsSystem(): bool
+    {
+        return $this->isSystem;
     }
 }

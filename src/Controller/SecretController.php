@@ -141,6 +141,12 @@ final class SecretController extends AbstractController
     )]
     public function update(#[MapEntity(id: 'id')] Secret $secret): Response
     {
+        if ($secret->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System secrets cannot be updated.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         if (!$this->deserializer->deserialize($secret, ['update'])) {
             return $this->deserializer->respondWithError();
         }
@@ -173,6 +179,12 @@ final class SecretController extends AbstractController
     )]
     public function delete(#[MapEntity(id: 'id')] Secret $secret): Response
     {
+        if ($secret->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System secrets cannot be deleted.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $this->entityManager->remove($secret);
         $this->entityManager->flush();
 

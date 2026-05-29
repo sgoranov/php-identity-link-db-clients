@@ -510,6 +510,10 @@ components:
         isPublic:
           description: 'Indicates whether the client is public'
           type: boolean
+        isSystem:
+          description: 'Indicates whether the client is managed by the system and cannot be updated or deleted through the API'
+          type: boolean
+          readOnly: true
       type: object
     Group:
       title: Group
@@ -525,6 +529,10 @@ components:
           description: 'Group name (must be unique)'
           type: string
           maxLength: 100
+        isSystem:
+          description: 'Indicates whether the group is managed by the system and cannot be updated or deleted through the API'
+          type: boolean
+          readOnly: true
       type: object
     Secret:
       title: Secret
@@ -549,6 +557,10 @@ components:
           format: date-time
         client:
           $ref: '#/components/schemas/Client'
+        isSystem:
+          description: 'Indicates whether the secret is managed by the system and cannot be updated or deleted through the API'
+          type: boolean
+          readOnly: true
       type: object
   securitySchemes:
     bearerAuth:

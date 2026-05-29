@@ -79,6 +79,12 @@ use Symfony\Component\Validator\Constraints as Assert;
             property: "isPublic",
             description: "Indicates whether the client is public",
             type: "boolean"
+        ),
+        new OA\Property(
+            property: "isSystem",
+            description: "Indicates whether the client is managed by the system and cannot be updated or deleted through the API",
+            type: "boolean",
+            readOnly: true
         )
     ]
 )]
@@ -155,6 +161,9 @@ class Client
     #[Assert\NotNull(groups: ['create'])]
     #[ORM\Column]
     private bool $isPublic;
+
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isSystem = false;
 
     public function __construct()
     {
@@ -235,6 +244,11 @@ class Client
     public function setIsPublic(bool $isPublic): void
     {
         $this->isPublic = $isPublic;
+    }
+
+    public function getIsSystem(): bool
+    {
+        return $this->isSystem;
     }
 
     public function getSecrets(): Collection

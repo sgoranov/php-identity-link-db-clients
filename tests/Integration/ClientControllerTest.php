@@ -5,6 +5,7 @@ namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
 use App\Repository\ClientRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
@@ -114,6 +115,31 @@ class ClientControllerTest extends WebTestCase
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame('test',
             json_decode($response->getContent(), true)['response']['client']['name']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['client']['isSystem']);
+    }
+
+    public function testCreateClientCannotSetSystemFlag(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_system',
+            'description' => 'client description',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
+            'isPublic' => false,
+            'isSystem' => true,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringStartsWith('Extra attributes are not allowed',
+            json_decode($response->getContent(), true)['error']);
     }
 
     public function testUpdateClientWithInvalidUuid()
@@ -159,6 +185,27 @@ class ClientControllerTest extends WebTestCase
             json_decode($response->getContent(), true)['response']['client']['name']);
     }
 
+    public function testUpdateSystemClientIsForbidden(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        list($entity) = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+        $this->markClientAsSystem($client->getContainer()->get(EntityManagerInterface::class), $entity->getId());
+
+        $client->request('PUT', $router->generate('api_v1_update_client', [
+            'id' => $entity->getId()
+        ]), [], [], [], json_encode(['name' => 'name_new']));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System clients cannot be updated.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
     public function testDeleteClientSuccessfully()
     {
         $client = static::createClient();
@@ -175,6 +222,27 @@ class ClientControllerTest extends WebTestCase
         $response = $client->getResponse();
 
         $this->assertSame(204, $response->getStatusCode());
+    }
+
+    public function testDeleteSystemClientIsForbidden(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        list($entity) = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+        $this->markClientAsSystem($client->getContainer()->get(EntityManagerInterface::class), $entity->getId());
+
+        $client->request('DELETE', $router->generate('api_v1_delete_client', [
+            'id' => $entity->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System clients cannot be deleted.',
+            json_decode($response->getContent(), true)['error']);
     }
 
     public function testFetchClientSuccessfully()
@@ -195,5 +263,35 @@ class ClientControllerTest extends WebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame(AppFixtures::CLIENT_NAME,
             json_decode($response->getContent(), true)['response']['client']['name']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['client']['isSystem']);
+    }
+
+    public function testFetchSystemClientExposesSystemFlag(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        list($entity) = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+        $this->markClientAsSystem($client->getContainer()->get(EntityManagerInterface::class), $entity->getId());
+
+        $client->request('GET', $router->generate('api_v1_fetch_client', [
+            'id' => $entity->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue(json_decode($response->getContent(), true)['response']['client']['isSystem']);
+    }
+
+    private function markClientAsSystem(EntityManagerInterface $entityManager, string $id): void
+    {
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE client SET is_system = true WHERE id = :id',
+            ['id' => $id]
+        );
+        $entityManager->clear();
     }
 }

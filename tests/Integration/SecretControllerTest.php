@@ -5,6 +5,7 @@ namespace App\Tests\Integration;
 use App\DataFixtures\AppFixtures;
 use App\Repository\ClientRepository;
 use App\Repository\SecretRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
@@ -38,6 +39,36 @@ class SecretControllerTest extends WebTestCase
         $this->assertSame('master password',
             json_decode($response->getContent(), true)['response']['secret']['passwordHint']);
         $this->assertArrayNotHasKey('password', json_decode($response->getContent(), true)['response']['secret']);
+        $this->assertFalse(json_decode($response->getContent(), true)['response']['secret']['isSystem']);
+    }
+
+    public function testCreateSecretCannotSetSystemFlag(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $container = static::getContainer();
+        $clientRepository = $container->get(ClientRepository::class);
+        $clientEntity = $clientRepository->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $currentDateTime = new \DateTime();
+
+        $content = [
+            'password' => 'mypass',
+            'passwordHint' => 'master password',
+            'expirationDateTime' => $currentDateTime->add(new \DateInterval('P1D'))->format('Y-m-d H:i:s'),
+            'client' => $clientEntity->getId(),
+            'isSystem' => true,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_secret'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringStartsWith('Extra attributes are not allowed',
+            json_decode($response->getContent(), true)['error']);
     }
 
     public function testUpdateSecret()
@@ -63,6 +94,68 @@ class SecretControllerTest extends WebTestCase
         $this->assertSame('master password',
             json_decode($response->getContent(), true)['response']['secret']['passwordHint']);
         $this->assertArrayNotHasKey('password', json_decode($response->getContent(), true)['response']['secret']);
+    }
+
+    public function testUpdateSystemSecretIsForbidden(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(SecretRepository::class);
+        list($secret) = $repository->findBy(['passwordHint' => AppFixtures::CLIENT_SECRET_HINT]);
+        $this->markSecretAsSystem($client->getContainer()->get(EntityManagerInterface::class), $secret->getId());
+
+        $client->request('PUT', $router->generate('api_v1_update_secret', [
+            'id' => $secret->getId()
+        ]), [], [], [], json_encode(['passwordHint' => 'master password']));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System secrets cannot be updated.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
+    public function testDeleteSystemSecretIsForbidden(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(SecretRepository::class);
+        list($secret) = $repository->findBy(['passwordHint' => AppFixtures::CLIENT_SECRET_HINT]);
+        $this->markSecretAsSystem($client->getContainer()->get(EntityManagerInterface::class), $secret->getId());
+
+        $client->request('DELETE', $router->generate('api_v1_delete_secret', [
+            'id' => $secret->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(403, $response->getStatusCode());
+        $this->assertSame('System secrets cannot be deleted.',
+            json_decode($response->getContent(), true)['error']);
+    }
+
+    public function testFetchSystemSecretExposesSystemFlag(): void
+    {
+        $client = static::createClient();
+        $testUser = new User('test', ['ROLE_ADMIN']);
+        $client->loginUser($testUser);
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(SecretRepository::class);
+        list($secret) = $repository->findBy(['passwordHint' => AppFixtures::CLIENT_SECRET_HINT]);
+        $this->markSecretAsSystem($client->getContainer()->get(EntityManagerInterface::class), $secret->getId());
+
+        $client->request('GET', $router->generate('api_v1_fetch_secret', [
+            'id' => $secret->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertTrue(json_decode($response->getContent(), true)['response']['secret']['isSystem']);
     }
 
     public function testUpdateSecretPassword()
@@ -350,5 +443,14 @@ class SecretControllerTest extends WebTestCase
             // Optionally shutdown between iterations to avoid lingering state
             static::ensureKernelShutdown();
         }
+    }
+
+    private function markSecretAsSystem(EntityManagerInterface $entityManager, string $id): void
+    {
+        $entityManager->getConnection()->executeStatement(
+            'UPDATE secret SET is_system = true WHERE id = :id',
+            ['id' => $id]
+        );
+        $entityManager->clear();
     }
 }

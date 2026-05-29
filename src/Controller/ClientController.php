@@ -132,6 +132,12 @@ final class ClientController extends AbstractController
     )]
     public function update(#[MapEntity(id: 'id')] Client $client): Response
     {
+        if ($client->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System clients cannot be updated.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         if (!$this->deserializer->deserialize($client, ['update'])) {
             return $this->deserializer->respondWithError();
         }
@@ -165,6 +171,12 @@ final class ClientController extends AbstractController
     )]
     public function delete(#[MapEntity(id: 'id')] Client $client): Response
     {
+        if ($client->getIsSystem()) {
+            return new JsonResponse([
+                'error' => 'System clients cannot be deleted.'
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         $this->entityManager->remove($client);
         $this->entityManager->flush();
 

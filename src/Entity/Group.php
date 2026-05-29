@@ -31,6 +31,12 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "Group name (must be unique)",
             type: "string",
             maxLength: 100
+        ),
+        new OA\Property(
+            property: "isSystem",
+            description: "Indicates whether the group is managed by the system and cannot be updated or deleted through the API",
+            type: "boolean",
+            readOnly: true
         )
     ]
 )]
@@ -50,6 +56,9 @@ class Group
     #[ORM\Column(length: 100)]
     private string $name;
 
+    #[ORM\Column(options: ['default' => false])]
+    private bool $isSystem = false;
+
     #[Ignore]
     #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: "groups")]
     private Collection $clients;
@@ -67,5 +76,10 @@ class Group
     public function setName(string $name): void
     {
         $this->name = $name;
+    }
+
+    public function getIsSystem(): bool
+    {
+        return $this->isSystem;
     }
 }
