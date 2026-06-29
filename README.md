@@ -20,7 +20,6 @@ The OpenAPI specification is available at:
 You can visualize it using:
 
 - [Swagger Editor](https://editor.swagger.io/)
-- Swagger UI (if using Docker)
 
 
 ## License
