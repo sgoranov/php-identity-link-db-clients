@@ -7,6 +7,7 @@ use App\DataFixtures\AppFixtures;
 use App\Repository\GroupRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -14,9 +15,7 @@ class GroupControllerTest extends WebTestCase
 {
     public function testCreateGroupWithMissingBody(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $client->request('POST', $router->generate('api_v1_create_group'));
@@ -27,9 +26,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testCreateGroupWithEmptyName(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -46,9 +43,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testCreateGroup(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -66,9 +61,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testCreateGroupCannotSetSystemFlag(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -86,9 +79,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testUpdateGroupWithInvalidUuid()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -105,9 +96,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testUpdateGroupWithInvalidName()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -127,9 +116,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testUpdateGroupSuccessfully()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -151,9 +138,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testUpdateSystemGroupIsForbidden(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(GroupRepository::class);
@@ -172,9 +157,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testDeleteGroupWithMissingUuid()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $client->request('DELETE', $router->generate('api_v1_update_group', [
@@ -187,9 +170,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testDeleteGroupSuccessfully()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(GroupRepository::class);
@@ -205,9 +186,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testDeleteSystemGroupIsForbidden(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(GroupRepository::class);
@@ -226,9 +205,7 @@ class GroupControllerTest extends WebTestCase
 
     public function testFetchSystemGroupExposesSystemFlag(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(GroupRepository::class);
@@ -242,6 +219,14 @@ class GroupControllerTest extends WebTestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue(json_decode($response->getContent(), true)['response']['group']['isSystem']);
+    }
+
+    private function createAuthenticatedClient(): KernelBrowser
+    {
+        $client = static::createClient();
+        $client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', 'test'));
+
+        return $client;
     }
 
     private function markGroupAsSystem(EntityManagerInterface $entityManager, string $id): void

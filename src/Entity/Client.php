@@ -85,6 +85,11 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "Indicates whether the client is managed by the system and cannot be updated or deleted through the API",
             type: "boolean",
             readOnly: true
+        ),
+        new OA\Property(
+            property: "consentRequired",
+            description: "Indicates whether the OAuth client requires user consent to be granted via the consent screen during the authorization flow",
+            type: "boolean"
         )
     ]
 )]
@@ -164,6 +169,10 @@ class Client
 
     #[ORM\Column(options: ['default' => false])]
     private bool $isSystem = false;
+
+    #[Groups(['create', 'update'])]
+    #[ORM\Column(options: ['default' => false])]
+    private bool $consentRequired = false;
 
     public function __construct()
     {
@@ -259,5 +268,15 @@ class Client
     public function setSecrets(Collection $secrets): void
     {
         $this->secrets = $secrets;
+    }
+
+    public function isConsentRequired(): bool
+    {
+        return $this->consentRequired;
+    }
+
+    public function setConsentRequired(bool $consentRequired): void
+    {
+        $this->consentRequired = $consentRequired;
     }
 }

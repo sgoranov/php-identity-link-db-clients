@@ -5,6 +5,7 @@ namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
 use sgoranov\IdentityLinkShared\Security\User;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -12,9 +13,7 @@ class QueryControllerTest extends WebTestCase
 {
     public function testQueryWithLimitAsString()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $client->request('POST', $router->generate('api_v1_query', []), [], [], [], json_encode([
@@ -31,9 +30,7 @@ class QueryControllerTest extends WebTestCase
 
     public function testQueryWithNegativeLimit()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $client->request('POST', $router->generate('api_v1_query', []), [], [], [], json_encode([
@@ -50,9 +47,7 @@ class QueryControllerTest extends WebTestCase
 
     public function testQueryWithNegativeOffset()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $client->request('POST', $router->generate('api_v1_query', []), [], [], [], json_encode([
@@ -69,9 +64,7 @@ class QueryControllerTest extends WebTestCase
 
     public function testQuerySuccessfully()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         // fetch clients with at least one active secret
@@ -97,5 +90,13 @@ class QueryControllerTest extends WebTestCase
             json_decode($response->getContent(), true)['response']['hasMore']);
         $this->assertSame(1,
             count(json_decode($response->getContent(), true)['response']['result']));
+    }
+
+    private function createAuthenticatedClient(): KernelBrowser
+    {
+        $client = static::createClient();
+        $client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', 'test'));
+
+        return $client;
     }
 }

@@ -1,0 +1,3 @@
+services:
+  sgoranov\IdentityLinkShared\Security\AccessTokenHandler:
+    class: App\Tests\Helper\Mock\MockAccessTokenHandler

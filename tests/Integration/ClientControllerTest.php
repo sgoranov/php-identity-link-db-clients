@@ -7,6 +7,7 @@ use App\DataFixtures\AppFixtures;
 use App\Repository\ClientRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -27,9 +28,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithEmptyName(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -50,9 +49,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithInvalidName(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -73,9 +70,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientWithExistingName(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -96,9 +91,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientSuccessfully(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -120,9 +113,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testCreateClientCannotSetSystemFlag(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -144,9 +135,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testUpdateClientWithInvalidUuid()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -163,9 +152,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testUpdateClientSuccessfully()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -187,9 +174,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testUpdateSystemClientIsForbidden(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(ClientRepository::class);
@@ -208,9 +193,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testDeleteClientSuccessfully()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(ClientRepository::class);
@@ -226,9 +209,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testDeleteSystemClientIsForbidden(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(ClientRepository::class);
@@ -247,9 +228,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testFetchClientSuccessfully()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(ClientRepository::class);
@@ -268,9 +247,7 @@ class ClientControllerTest extends WebTestCase
 
     public function testFetchSystemClientExposesSystemFlag(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(ClientRepository::class);
@@ -284,6 +261,89 @@ class ClientControllerTest extends WebTestCase
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertTrue(json_decode($response->getContent(), true)['response']['client']['isSystem']);
+    }
+
+    public function testCreateClientWithInvalidConsentType(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_invalid_consent',
+            'description' => 'client with invalid consent type',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['authorization_code'],
+            'isPublic' => false,
+            'consentRequired' => 'yes', // String instead of boolean
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame('The consentRequired property must be of type bool, but string was provided.',
+            json_decode($response->getContent(), true)['error']);
+        $this->assertSame(400, $response->getStatusCode());
+    }
+
+    public function testCreateClientWithDefaultConsentRequiredValue(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_default_consent',
+            'description' => 'client without explicit consent setting',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['authorization_code'],
+            'isPublic' => false
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+        $response = $client->getResponse();
+
+        $this->assertSame(201, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true)['response']['client'];
+
+        $this->assertArrayHasKey('consentRequired', $responseData);
+        $this->assertFalse($responseData['consentRequired']);
+    }
+
+    public function testConsentRequiredPersistsAfterMultipleUpdates(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        list($entity) = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $client->request('PUT', $router->generate('api_v1_update_client', [
+            'id' => $entity->getId()
+        ]), [], [], [], json_encode(['consentRequired' => true]));
+        $response = $client->getResponse();
+        $this->assertSame(200, $response->getStatusCode());
+
+        $client->request('PUT', $router->generate('api_v1_update_client', [
+            'id' => $entity->getId()
+        ]), [], [], [], json_encode(['description' => 'updated description']));
+        $response = $client->getResponse();
+        $this->assertSame(200, $response->getStatusCode());
+
+        $client->request('GET', $router->generate('api_v1_fetch_client', [
+            'id' => $entity->getId()
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+        $responseData = json_decode($response->getContent(), true)['response']['client'];
+        $this->assertTrue($responseData['consentRequired']);
+    }
+
+    private function createAuthenticatedClient(): KernelBrowser
+    {
+        $client = static::createClient();
+        $client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', 'test'));
+
+        return $client;
     }
 
     private function markClientAsSystem(EntityManagerInterface $entityManager, string $id): void

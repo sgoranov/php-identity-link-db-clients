@@ -7,6 +7,7 @@ use App\Repository\ClientRepository;
 use App\Repository\SecretRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
+use Symfony\Bundle\FrameworkBundle\KernelBrowser;
 use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 use Symfony\Component\Routing\RouterInterface;
 
@@ -14,9 +15,7 @@ class SecretControllerTest extends WebTestCase
 {
     public function testCreateSecret(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $container = static::getContainer();
@@ -44,9 +43,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testCreateSecretCannotSetSystemFlag(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $container = static::getContainer();
@@ -73,9 +70,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testUpdateSecret()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -98,9 +93,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testUpdateSystemSecretIsForbidden(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(SecretRepository::class);
@@ -119,9 +112,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testDeleteSystemSecretIsForbidden(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(SecretRepository::class);
@@ -140,9 +131,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testFetchSystemSecretExposesSystemFlag(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $repository = $client->getContainer()->get(SecretRepository::class);
@@ -160,9 +149,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testUpdateSecretPassword()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $content = [
@@ -184,9 +171,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testUpdateSecretExpirationDateTime()
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
         $router = $client->getContainer()->get(RouterInterface::class);
 
         $currentDateTime = new \DateTime();
@@ -210,9 +195,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testIssueWithoutExpirationPeriod(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
 
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -241,9 +224,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testIssueWithInvalidExpirationPeriod(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
 
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -269,9 +250,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testIssueWithoutPasswordHintSetsDefault(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
 
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -296,9 +275,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testIssueWithPasswordHint(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
 
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -323,9 +300,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testIssueWithInvalidClientUuid(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
 
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -346,9 +321,7 @@ class SecretControllerTest extends WebTestCase
 
     public function testIssueSuccessfulIncludesGeneratedPassword(): void
     {
-        $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
-        $client->loginUser($testUser);
+        $client = $this->createAuthenticatedClient();
 
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -443,6 +416,14 @@ class SecretControllerTest extends WebTestCase
             // Optionally shutdown between iterations to avoid lingering state
             static::ensureKernelShutdown();
         }
+    }
+
+    private function createAuthenticatedClient(): KernelBrowser
+    {
+        $client = static::createClient();
+        $client->setServerParameter('HTTP_Authorization', sprintf('Bearer %s', 'test'));
+
+        return $client;
     }
 
     private function markSecretAsSystem(EntityManagerInterface $entityManager, string $id): void

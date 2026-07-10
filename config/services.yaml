@@ -46,3 +46,8 @@ services:
     sgoranov\IdentityLinkShared\EventListener\RequestResponseLogger:
         arguments:
             $logger: '@monolog.logger.rest'
+
+
+when@test:
+    imports:
+        - { resource: services_test.yaml }
