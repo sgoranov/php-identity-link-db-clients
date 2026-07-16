@@ -514,6 +514,29 @@ components:
           description: 'Indicates whether the client is managed by the system and cannot be updated or deleted through the API'
           type: boolean
           readOnly: true
+        consentRequired:
+          description: 'Indicates whether the OAuth client requires user consent to be granted via the consent screen during the authorization flow'
+          type: boolean
+        applicationUrl:
+          description: 'Application homepage URL'
+          type: string
+          format: uri
+          nullable: true
+        termsOfServiceUrl:
+          description: 'Terms of Service URL'
+          type: string
+          format: uri
+          nullable: true
+        privacyPolicyUrl:
+          description: 'Privacy Policy URL'
+          type: string
+          format: uri
+          nullable: true
+        logoUrl:
+          description: 'Application logo URL'
+          type: string
+          format: uri
+          nullable: true
       type: object
     Group:
       title: Group

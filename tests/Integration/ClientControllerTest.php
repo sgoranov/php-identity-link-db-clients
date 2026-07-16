@@ -338,6 +338,47 @@ class ClientControllerTest extends WebTestCase
         $this->assertTrue($responseData['consentRequired']);
     }
 
+    public function testClientMetadataUrlsPersistAfterMultipleUpdates(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        [$entity] = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $metadata = [
+            'applicationUrl' => 'https://example.com',
+            'termsOfServiceUrl' => 'https://example.com/terms',
+            'privacyPolicyUrl' => 'https://example.com/privacy',
+            'logoUrl' => 'https://example.com/logo.png',
+        ];
+
+        $client->request('PUT', $router->generate('api_v1_update_client', ['id' => $entity->getId()]), [], [], [], json_encode($metadata));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+
+        $client->request('PUT', $router->generate('api_v1_update_client', ['id' => $entity->getId()]), [], [], [], json_encode([
+            'description' => 'updated description'
+        ]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+
+        $client->request('GET', $router->generate('api_v1_fetch_client', ['id' => $entity->getId()]));
+        $response = $client->getResponse();
+
+        $this->assertSame(200, $response->getStatusCode());
+
+        $responseData = json_decode($response->getContent(), true)['response']['client'];
+
+        $this->assertSame('https://example.com', $responseData['applicationUrl']);
+        $this->assertSame('https://example.com/terms', $responseData['termsOfServiceUrl']);
+        $this->assertSame('https://example.com/privacy', $responseData['privacyPolicyUrl']);
+        $this->assertSame('https://example.com/logo.png', $responseData['logoUrl']);
+        $this->assertSame('updated description', $responseData['description']);
+    }
+
     private function createAuthenticatedClient(): KernelBrowser
     {
         $client = static::createClient();

@@ -90,6 +90,34 @@ use Symfony\Component\Validator\Constraints as Assert;
             property: "consentRequired",
             description: "Indicates whether the OAuth client requires user consent to be granted via the consent screen during the authorization flow",
             type: "boolean"
+        ),
+        new OA\Property(
+            property: "applicationUrl",
+            description: "Application homepage URL",
+            type: "string",
+            format: "uri",
+            nullable: true
+        ),
+        new OA\Property(
+            property: "termsOfServiceUrl",
+            description: "Terms of Service URL",
+            type: "string",
+            format: "uri",
+            nullable: true
+        ),
+        new OA\Property(
+            property: "privacyPolicyUrl",
+            description: "Privacy Policy URL",
+            type: "string",
+            format: "uri",
+            nullable: true
+        ),
+        new OA\Property(
+            property: "logoUrl",
+            description: "Application logo URL",
+            type: "string",
+            format: "uri",
+            nullable: true
         )
     ]
 )]
@@ -173,6 +201,30 @@ class Client
     #[Groups(['create', 'update'])]
     #[ORM\Column(options: ['default' => false])]
     private bool $consentRequired = false;
+
+    #[Groups(['create', 'update'])]
+    #[Assert\Url(groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
+    #[ORM\Column(length: 3000, nullable: true)]
+    private ?string $applicationUrl = null;
+
+    #[Groups(['create', 'update'])]
+    #[Assert\Url(groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
+    #[ORM\Column(length: 3000, nullable: true)]
+    private ?string $termsOfServiceUrl = null;
+
+    #[Groups(['create', 'update'])]
+    #[Assert\Url(groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
+    #[ORM\Column(length: 3000, nullable: true)]
+    private ?string $privacyPolicyUrl = null;
+
+    #[Groups(['create', 'update'])]
+    #[Assert\Url(groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
+    #[ORM\Column(length: 3000, nullable: true)]
+    private ?string $logoUrl = null;
 
     public function __construct()
     {
@@ -278,5 +330,45 @@ class Client
     public function setConsentRequired(bool $consentRequired): void
     {
         $this->consentRequired = $consentRequired;
+    }
+
+    public function getApplicationUrl(): ?string
+    {
+        return $this->applicationUrl;
+    }
+
+    public function setApplicationUrl(?string $applicationUrl): void
+    {
+        $this->applicationUrl = $applicationUrl;
+    }
+
+    public function getTermsOfServiceUrl(): ?string
+    {
+        return $this->termsOfServiceUrl;
+    }
+
+    public function setTermsOfServiceUrl(?string $termsOfServiceUrl): void
+    {
+        $this->termsOfServiceUrl = $termsOfServiceUrl;
+    }
+
+    public function getPrivacyPolicyUrl(): ?string
+    {
+        return $this->privacyPolicyUrl;
+    }
+
+    public function setPrivacyPolicyUrl(?string $privacyPolicyUrl): void
+    {
+        $this->privacyPolicyUrl = $privacyPolicyUrl;
+    }
+
+    public function getLogoUrl(): ?string
+    {
+        return $this->logoUrl;
+    }
+
+    public function setLogoUrl(?string $logoUrl): void
+    {
+        $this->logoUrl = $logoUrl;
     }
 }
