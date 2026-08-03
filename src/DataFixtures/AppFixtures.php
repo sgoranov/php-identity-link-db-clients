@@ -29,6 +29,7 @@ class AppFixtures extends Fixture
         $client = new Client();
         $client->setIsPublic(false);
         $client->setDescription('private client');
+        $client->setAudience('https://example.com/api');
         $client->setName(self::CLIENT_NAME);
         $client->setGrantTypes(['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit']);
         $client->setRedirectUri(['http://localhost/']);

@@ -34,6 +34,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => '',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -55,6 +56,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => '&&%$',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -76,6 +78,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => AppFixtures::CLIENT_NAME,
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -97,6 +100,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -108,7 +112,50 @@ class ClientControllerTest extends WebTestCase
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame('test',
             json_decode($response->getContent(), true)['response']['client']['name']);
+        $this->assertSame('https://example.com/api',
+            json_decode($response->getContent(), true)['response']['client']['audience']);
         $this->assertFalse(json_decode($response->getContent(), true)['response']['client']['isSystem']);
+    }
+
+    public function testCreateClientWithoutAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_without_audience',
+            'description' => 'client description',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['client_credentials'],
+            'isPublic' => false,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+
+        $this->assertSame(400, $client->getResponse()->getStatusCode());
+        $this->assertSame('Invalid audience. This value should not be blank.',
+            json_decode($client->getResponse()->getContent(), true)['error']);
+    }
+
+    public function testCreateClientWithNonHttpsAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_invalid_audience',
+            'description' => 'client description',
+            'audience' => 'http://example.com/api',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['client_credentials'],
+            'isPublic' => false,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+
+        $this->assertSame(400, $client->getResponse()->getStatusCode());
+        $this->assertSame('Invalid audience. This value is not a valid URL.',
+            json_decode($client->getResponse()->getContent(), true)['error']);
     }
 
     public function testCreateClientCannotSetSystemFlag(): void
@@ -119,6 +166,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test_system',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -271,6 +319,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test_invalid_consent',
             'description' => 'client with invalid consent type',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['authorization_code'],
             'isPublic' => false,
@@ -293,6 +342,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test_default_consent',
             'description' => 'client without explicit consent setting',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['authorization_code'],
             'isPublic' => false

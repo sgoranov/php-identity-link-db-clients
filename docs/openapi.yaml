@@ -461,6 +461,8 @@ components:
     Client:
       title: Client
       description: 'OAuth2 Client entity used for identity link authorization'
+      required:
+        - audience
       properties:
         id:
           description: 'Client UUID'
@@ -473,6 +475,11 @@ components:
         description:
           description: 'Client description'
           type: string
+          maxLength: 3000
+        audience:
+          description: 'HTTPS URL identifying the resource server'
+          type: string
+          format: uri
           maxLength: 3000
         redirectUri:
           description: 'Client redirect URIs'

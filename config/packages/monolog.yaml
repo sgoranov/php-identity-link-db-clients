@@ -36,16 +36,11 @@ when@test:
                 action_level: error
                 handler: main_output
                 excluded_http_codes: [404, 405]
-                channels: ["!event", "!rest"]
+                channels: ["!event"]
             main_output:
                 type: stream
                 path: php://stderr
                 level: debug
-            rest_log:
-                type: stream
-                path: php://stderr
-                level: debug
-                channels: [ "rest" ]
 
 when@prod:
     monolog:

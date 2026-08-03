@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     schema: "Client",
     title: "Client",
     description: "OAuth2 Client entity used for identity link authorization",
+    required: ["audience"],
     properties: [
         new OA\Property(
             property: "id",
@@ -36,6 +37,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             property: "description",
             description: "Client description",
             type: "string",
+            maxLength: 3000
+        ),
+        new OA\Property(
+            property: "audience",
+            description: "HTTPS URL identifying the resource server",
+            type: "string",
+            format: "uri",
             maxLength: 3000
         ),
         new OA\Property(
@@ -142,6 +150,13 @@ class Client
     #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
     #[ORM\Column(length: 3000)]
     private string $description;
+
+    #[Groups(['create', 'update'])]
+    #[Assert\NotBlank(groups: ['create'])]
+    #[Assert\Url(protocols: ['https'], groups: ['create', 'update'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
+    #[ORM\Column(length: 3000)]
+    private string $audience;
 
     #[Groups(['create', 'update'])]
     #[Assert\Count(
@@ -255,6 +270,16 @@ class Client
     public function setDescription(string $description): void
     {
         $this->description = $description;
+    }
+
+    public function getAudience(): string
+    {
+        return $this->audience;
+    }
+
+    public function setAudience(string $audience): void
+    {
+        $this->audience = $audience;
     }
 
     public function getRedirectUri(): array
