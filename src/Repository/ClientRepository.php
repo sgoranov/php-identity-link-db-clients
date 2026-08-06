@@ -41,4 +41,29 @@ class ClientRepository extends ServiceEntityRepository
     {
         return $this->findOneBy(['name' => $name]);
     }
+
+    /**
+     * Returns the distinct scopes granted to a client through their current groups.
+     *
+     * @return list<string>
+     */
+    public function getScopes(Client $client, string $audience): array
+    {
+        return $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            <<<'SQL'
+                SELECT DISTINCT gs.scope
+                FROM group_scope gs
+                INNER JOIN client_group ug ON ug.group_id = gs.group_id
+                WHERE ug.client_id = :clientId
+                  AND gs.audience_hash = :audienceHash
+                  AND gs.audience = :audience
+                ORDER BY gs.scope
+                SQL,
+            [
+                'clientId' => $client->getId(),
+                'audienceHash' => hash('sha256', $audience),
+                'audience' => $audience,
+            ]
+        );
+    }
 }

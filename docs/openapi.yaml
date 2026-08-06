@@ -499,11 +499,6 @@ components:
               - authorization_code
               - refresh_token
               - implicit
-        scopes:
-          description: 'OAuth2 scopes for the client'
-          type: array
-          items:
-            type: string
         groups:
           description: 'Group IDs assigned to the client'
           type: array

@@ -4,64 +4,102 @@ declare(strict_types=1);
 namespace App\Tests\Unit\Repository;
 
 use App\DataFixtures\AppFixtures;
+use App\Entity\GroupScope;
 use App\Repository\ClientRepository;
+use App\Repository\GroupRepository;
 use App\Repository\SecretRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 class ClientRepositoryTest extends KernelTestCase
 {
-    private static ClientRepository $clientRepository;
-    private static SecretRepository $secretRepository;
-    private static EntityManagerInterface $entityManager;
-
-    public static function setUpBeforeClass(): void
+    public function testGetScopesReturnsScopesForAudienceFromClientGroups(): void
     {
+        self::bootKernel();
         $container = static::getContainer();
-        self::$entityManager = $container->get(EntityManagerInterface::class);
-        self::$secretRepository = $container->get(SecretRepository::class);
-        self::$clientRepository = $container->get(ClientRepository::class);
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $repository = $container->get(ClientRepository::class);
+        $group = $container->get(GroupRepository::class)
+            ->findOneBy(['name' => AppFixtures::GROUP_NAME]);
+        $client = $repository->getClientByName(AppFixtures::CLIENT_NAME);
+
+        $groupScope = new GroupScope();
+        $groupScope->setGroup($group);
+        $groupScope->setAudience('https://example.com/orders');
+        $groupScope->setScope('orders:read');
+        $entityManager->persist($groupScope);
+        $entityManager->flush();
+
+        $this->assertSame(
+            ['orders:read'],
+            $repository->getScopes($client, 'https://example.com/orders')
+        );
+    }
+
+    public function testGetScopesDoesNotReturnScopesForAnotherAudience(): void
+    {
+        self::bootKernel();
+        $repository = static::getContainer()->get(ClientRepository::class);
+        $client = $repository->getClientByName(AppFixtures::CLIENT_NAME);
+
+        $this->assertSame(
+            [],
+            $repository->getScopes($client, 'https://example.com/unknown')
+        );
     }
 
     public function testGetClientByIdAndSecret(): void
     {
-        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
-        $result = self::$clientRepository->getClientByIdAndSecret(
+        self::bootKernel();
+        $repository = static::getContainer()->get(ClientRepository::class);
+        $client = $repository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = $repository->getClientByIdAndSecret(
             $client->getId(), AppFixtures::CLIENT_SECRET, 'client_credentials');
         $this->assertEquals(AppFixtures::CLIENT_NAME, $result->getName());
     }
 
     public function testGetClientByIdAndSecretWithInvalidSecret(): void
     {
-        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
-        $result = self::$clientRepository->getClientByIdAndSecret(
+        self::bootKernel();
+        $repository = static::getContainer()->get(ClientRepository::class);
+        $client = $repository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = $repository->getClientByIdAndSecret(
             $client->getId(), 'pass', 'client_credentials');
         $this->assertNull($result);
     }
 
     public function testGetClientByIdAndSecretWithExpiredSecret(): void
     {
+        self::bootKernel();
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $repository = $container->get(ClientRepository::class);
         $currentDateTime = new \DateTime();
-        $secret = self::$secretRepository->findOneBy(['passwordHint' => AppFixtures::CLIENT_SECRET_HINT]);
+        $secret = $container->get(SecretRepository::class)
+            ->findOneBy(['passwordHint' => AppFixtures::CLIENT_SECRET_HINT]);
         $secret->setExpirationDateTime($currentDateTime->sub(new \DateInterval('P1D')));
-        self::$entityManager->persist($secret);
-        self::$entityManager->flush();
+        $entityManager->persist($secret);
+        $entityManager->flush();
 
-        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
-        $result = self::$clientRepository->getClientByIdAndSecret(
+        $client = $repository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = $repository->getClientByIdAndSecret(
             $client->getId(), AppFixtures::CLIENT_SECRET, 'client_credentials');
         $this->assertNull($result);
     }
 
-    public function testGetClientByIdAndSecretWithInvalidGrantType()
+    public function testGetClientByIdAndSecretWithInvalidGrantType(): void
     {
-        $client = self::$clientRepository->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
+        self::bootKernel();
+        $container = static::getContainer();
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $repository = $container->get(ClientRepository::class);
+        $client = $repository->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
         $client->setGrantTypes(['password', 'authorization_code', 'refresh_token', 'implicit']);
-        self::$entityManager->persist($client);
-        self::$entityManager->flush();
+        $entityManager->persist($client);
+        $entityManager->flush();
 
-        $client = self::$clientRepository->getClientByName(AppFixtures::CLIENT_NAME);
-        $result = self::$clientRepository->getClientByIdAndSecret(
+        $client = $repository->getClientByName(AppFixtures::CLIENT_NAME);
+        $result = $repository->getClientByIdAndSecret(
             $client->getId(), AppFixtures::CLIENT_SECRET, 'client_credentials');
         $this->assertNull($result);
     }

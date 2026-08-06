@@ -66,12 +66,6 @@ use Symfony\Component\Validator\Constraints as Assert;
             )
         ),
         new OA\Property(
-            property: "scopes",
-            description: "OAuth2 scopes for the client",
-            type: "array",
-            items: new OA\Items(type: "string")
-        ),
-        new OA\Property(
             property: "groups",
             description: "Group IDs assigned to the client",
             type: "array",
@@ -151,10 +145,10 @@ class Client
     #[ORM\Column(length: 3000)]
     private string $description;
 
-    #[Groups(['create', 'update'])]
+    #[Groups(['create'])]
     #[Assert\NotBlank(groups: ['create'])]
-    #[Assert\Url(protocols: ['https'], groups: ['create', 'update'])]
-    #[Assert\Length(min: 1, max: 3000, groups: ['create', 'update'])]
+    #[Assert\Url(protocols: ['https'], groups: ['create'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create'])]
     #[ORM\Column(length: 3000)]
     private string $audience;
 
@@ -190,10 +184,6 @@ class Client
     )]
     #[ORM\Column(type: 'json')]
     private array $grantTypes = [];
-
-    #[Groups(['create', 'update'])]
-    #[ORM\Column(type: 'json')]
-    private array $scopes = [];
 
     #[Groups(['create', 'update'])]
     #[Assert\Count(
@@ -310,16 +300,6 @@ class Client
     public function setGrantTypes(array $grantTypes): void
     {
         $this->grantTypes = $grantTypes;
-    }
-
-    public function getScopes(): array
-    {
-        return $this->scopes;
-    }
-
-    public function setScopes(array $scopes): void
-    {
-        $this->scopes = $scopes;
     }
 
     public function isPublic(): bool

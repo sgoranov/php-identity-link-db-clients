@@ -12,7 +12,7 @@ final class Version20260803085721 extends AbstractMigration
 {
     public function getDescription(): string
     {
-        return 'Add mandatory audience URL to clients.';
+        return 'Add mandatory audience URL and remove scopes from clients.';
     }
 
     public function up(Schema $schema): void
@@ -23,6 +23,7 @@ final class Version20260803085721 extends AbstractMigration
         );
 
         $this->addSql('ALTER TABLE client ADD audience VARCHAR(3000) NOT NULL');
+        $this->addSql('ALTER TABLE client DROP scopes');
     }
 
     public function down(Schema $schema): void
@@ -32,6 +33,8 @@ final class Version20260803085721 extends AbstractMigration
             'This migration is only supported on PostgreSQL.'
         );
 
+        $this->addSql("ALTER TABLE client ADD scopes JSON DEFAULT '[]' NOT NULL");
+        $this->addSql('ALTER TABLE client ALTER scopes DROP DEFAULT');
         $this->addSql('ALTER TABLE client DROP audience');
     }
 }

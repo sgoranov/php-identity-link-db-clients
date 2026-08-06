@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
+use App\Entity\GroupScope;
 use App\Repository\ClientRepository;
+use App\Repository\GroupRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -13,6 +15,51 @@ use Symfony\Component\Routing\RouterInterface;
 
 class ClientControllerTest extends WebTestCase
 {
+    public function testGetScopesForAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $container = $client->getContainer();
+        $router = $container->get(RouterInterface::class);
+        $group = $container->get(GroupRepository::class)
+            ->findOneBy(['name' => AppFixtures::GROUP_NAME]);
+        $clientEntity = $container->get(ClientRepository::class)
+            ->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $groupScope = new GroupScope();
+        $groupScope->setGroup($group);
+        $groupScope->setAudience('https://example.com/orders');
+        $groupScope->setScope('orders:read');
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $entityManager->persist($groupScope);
+        $entityManager->flush();
+
+        $client->request('GET', $router->generate('api_v1_get_client_scopes', [
+            'id' => $clientEntity->getId(),
+            'audience' => 'https://example.com/orders',
+        ]));
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSame(
+            ['orders:read'],
+            json_decode($client->getResponse()->getContent(), true)['response']['scopes']
+        );
+    }
+
+    public function testGetScopesRejectsMissingAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $container = $client->getContainer();
+        $clientEntity = $container->get(ClientRepository::class)
+            ->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $client->request('GET', $container->get(RouterInterface::class)->generate(
+            'api_v1_get_client_scopes',
+            ['id' => $clientEntity->getId()]
+        ));
+
+        $this->assertResponseStatusCodeSame(400);
+    }
+
     public function testCreateClientWithMissingBody(): void
     {
         $client = static::createClient();
@@ -218,6 +265,28 @@ class ClientControllerTest extends WebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('name_new',
             json_decode($response->getContent(), true)['response']['client']['name']);
+    }
+
+    public function testUpdateClientCannotChangeAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        list($entity) = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+        $originalAudience = $entity->getAudience();
+
+        $client->request('PUT', $router->generate('api_v1_update_client', [
+            'id' => $entity->getId()
+        ]), [], [], [], json_encode(['audience' => 'https://changed.example.com/api']));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringStartsWith('Extra attributes are not allowed',
+            json_decode($response->getContent(), true)['error']);
+
+        $client->getContainer()->get(EntityManagerInterface::class)->clear();
+        $updatedEntity = $repository->find($entity->getId());
+        $this->assertSame($originalAudience, $updatedEntity->getAudience());
     }
 
     public function testUpdateSystemClientIsForbidden(): void
