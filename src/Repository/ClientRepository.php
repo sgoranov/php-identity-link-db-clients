@@ -53,8 +53,8 @@ class ClientRepository extends ServiceEntityRepository
             <<<'SQL'
                 SELECT DISTINCT gs.scope
                 FROM group_scope gs
-                INNER JOIN client_group ug ON ug.group_id = gs.group_id
-                WHERE ug.client_id = :clientId
+                INNER JOIN client_group cg ON cg.group_id = gs.group_id
+                WHERE cg.client_id = :clientId
                   AND gs.audience_hash = :audienceHash
                   AND gs.audience = :audience
                 ORDER BY gs.scope

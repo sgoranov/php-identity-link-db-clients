@@ -43,6 +43,11 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
 
+    app.security.scope_voter:
+        class: Symfony\Component\Security\Core\Authorization\Voter\RoleVoter
+        arguments: ['clients.']
+        tags: ['security.voter']
+
     sgoranov\IdentityLinkShared\EventListener\RequestResponseLogger:
         arguments:
             $logger: '@monolog.logger.rest'

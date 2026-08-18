@@ -13,6 +13,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
 
 #[Route('/api/v1/group/{groupId}/scope', name: 'api_v1_group_scope_')]
@@ -41,6 +42,7 @@ final class GroupScopeController extends AbstractController
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
+    #[IsGranted('clients.groups.read')]
     public function list(#[MapEntity(id: 'groupId')] Group $group): Response
     {
         return $this->scopesResponse($group);
@@ -67,6 +69,7 @@ final class GroupScopeController extends AbstractController
             new OA\Response(response: 404, description: 'Group not found')
         ]
     )]
+    #[IsGranted('clients.groups.write')]
     public function create(#[MapEntity(id: 'groupId')] Group $group): Response
     {
         if ($response = $this->rejectSystemGroup($group)) {
@@ -101,6 +104,7 @@ final class GroupScopeController extends AbstractController
             new OA\Response(response: 404, description: 'Group or scope not found')
         ]
     )]
+    #[IsGranted('clients.groups.delete')]
     public function delete(
         #[MapEntity(id: 'groupId')] Group $group,
         #[MapEntity(id: 'scopeId')] GroupScope $groupScope,

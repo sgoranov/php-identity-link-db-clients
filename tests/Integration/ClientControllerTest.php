@@ -63,7 +63,7 @@ class ClientControllerTest extends WebTestCase
     public function testCreateClientWithMissingBody(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['clients.write']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 

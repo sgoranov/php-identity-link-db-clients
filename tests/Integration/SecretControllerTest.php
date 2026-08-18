@@ -368,7 +368,7 @@ class SecretControllerTest extends WebTestCase
         foreach ($periods as $periodKey => $interval) {
             // Fresh client per iteration to ensure a clean security context
             $client = static::createClient();
-            $testUser = new User('test', ['ROLE_ADMIN']);
+            $testUser = new User('test', ['clients.secrets.write']);
             $client->loginUser($testUser);
 
             // Router must come from THIS client's container
