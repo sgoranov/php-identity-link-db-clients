@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Entity;
 
 use App\Repository\GroupRepository;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use sgoranov\IdentityLinkShared\Validator\UniqueEntry;
 use Doctrine\ORM\Mapping as ORM;
@@ -37,6 +38,12 @@ use Symfony\Component\Validator\Constraints as Assert;
             description: "Indicates whether the group is managed by the system and cannot be updated or deleted through the API",
             type: "boolean",
             readOnly: true
+        ),
+        new OA\Property(
+            property: 'scopes',
+            description: 'Scopes issued for this group and their protected-resource audiences',
+            type: 'array',
+            items: new OA\Items(ref: '#/components/schemas/GroupScope')
         )
     ]
 )]
@@ -63,6 +70,22 @@ class Group
     #[ORM\ManyToMany(targetEntity: Client::class, mappedBy: "groups")]
     private Collection $clients;
 
+    /** @var Collection<int, GroupScope> */
+    #[ORM\OneToMany(
+        targetEntity: GroupScope::class,
+        mappedBy: 'group',
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    #[ORM\OrderBy(['audience' => 'ASC'])]
+    private Collection $scopes;
+
+    public function __construct()
+    {
+        $this->clients = new ArrayCollection();
+        $this->scopes = new ArrayCollection();
+    }
+
     public function getId(): ?string
     {
         return $this->id;
@@ -81,5 +104,24 @@ class Group
     public function getIsSystem(): bool
     {
         return $this->isSystem;
+    }
+
+    /** @return Collection<int, GroupScope> */
+    public function getScopes(): Collection
+    {
+        return $this->scopes;
+    }
+
+    public function addScope(GroupScope $scope): void
+    {
+        if (!$this->scopes->contains($scope)) {
+            $this->scopes->add($scope);
+            $scope->setGroup($this);
+        }
+    }
+
+    public function removeScope(GroupScope $scope): void
+    {
+        $this->scopes->removeElement($scope);
     }
 }

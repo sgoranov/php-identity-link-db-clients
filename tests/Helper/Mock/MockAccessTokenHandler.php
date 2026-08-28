@@ -13,7 +13,19 @@ class MockAccessTokenHandler implements AccessTokenHandlerInterface
     {
         return new UserBadge(
             'test',
-            fn() => new User('test', ['ROLE_ADMIN'])
+            fn() => new User('test', [
+                'clients.read',
+                'clients.write',
+                'clients.delete',
+                'clients.auth',
+                'clients.query',
+                'clients.groups.read',
+                'clients.groups.write',
+                'clients.groups.delete',
+                'clients.secrets.read',
+                'clients.secrets.write',
+                'clients.secrets.delete',
+            ])
         );
     }
 }

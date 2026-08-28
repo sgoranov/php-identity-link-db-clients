@@ -19,6 +19,7 @@ use Symfony\Component\Validator\Constraints as Assert;
     schema: "Client",
     title: "Client",
     description: "OAuth2 Client entity used for identity link authorization",
+    required: ["audience"],
     properties: [
         new OA\Property(
             property: "id",
@@ -39,6 +40,13 @@ use Symfony\Component\Validator\Constraints as Assert;
             maxLength: 3000
         ),
         new OA\Property(
+            property: "audience",
+            description: "HTTPS URL identifying the resource server",
+            type: "string",
+            format: "uri",
+            maxLength: 3000
+        ),
+        new OA\Property(
             property: "redirectUri",
             description: "Client redirect URIs",
             type: "array",
@@ -56,12 +64,6 @@ use Symfony\Component\Validator\Constraints as Assert;
                 type: "string",
                 enum: ["client_credentials", "password", "authorization_code", "refresh_token", "implicit"]
             )
-        ),
-        new OA\Property(
-            property: "scopes",
-            description: "OAuth2 scopes for the client",
-            type: "array",
-            items: new OA\Items(type: "string")
         ),
         new OA\Property(
             property: "groups",
@@ -143,6 +145,13 @@ class Client
     #[ORM\Column(length: 3000)]
     private string $description;
 
+    #[Groups(['create'])]
+    #[Assert\NotBlank(groups: ['create'])]
+    #[Assert\Url(protocols: ['https'], groups: ['create'])]
+    #[Assert\Length(min: 1, max: 3000, groups: ['create'])]
+    #[ORM\Column(length: 3000)]
+    private string $audience;
+
     #[Groups(['create', 'update'])]
     #[Assert\Count(
         min: 1,
@@ -175,10 +184,6 @@ class Client
     )]
     #[ORM\Column(type: 'json')]
     private array $grantTypes = [];
-
-    #[Groups(['create', 'update'])]
-    #[ORM\Column(type: 'json')]
-    private array $scopes = [];
 
     #[Groups(['create', 'update'])]
     #[Assert\Count(
@@ -257,6 +262,16 @@ class Client
         $this->description = $description;
     }
 
+    public function getAudience(): string
+    {
+        return $this->audience;
+    }
+
+    public function setAudience(string $audience): void
+    {
+        $this->audience = $audience;
+    }
+
     public function getRedirectUri(): array
     {
         return $this->redirectUri;
@@ -285,16 +300,6 @@ class Client
     public function setGrantTypes(array $grantTypes): void
     {
         $this->grantTypes = $grantTypes;
-    }
-
-    public function getScopes(): array
-    {
-        return $this->scopes;
-    }
-
-    public function setScopes(array $scopes): void
-    {
-        $this->scopes = $scopes;
     }
 
     public function isPublic(): bool

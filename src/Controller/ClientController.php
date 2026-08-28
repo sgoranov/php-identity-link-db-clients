@@ -12,9 +12,13 @@ use OpenApi\Attributes as OA;
 use Symfony\Bridge\Doctrine\Attribute\MapEntity;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\SerializerInterface;
+use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/api/v1', name: 'api_v1_')]
 final class ClientController extends AbstractController
@@ -24,8 +28,79 @@ final class ClientController extends AbstractController
         private readonly EntityManagerInterface $entityManager,
         private readonly Deserializer           $deserializer,
         private readonly ClientRepository       $repository,
+        private readonly ValidatorInterface     $validator,
     )
     {
+    }
+
+    #[Route('/client/{id}/scope', name: 'get_client_scopes', methods: 'GET')]
+    #[OA\Get(
+        path: '/api/v1/client/{id}/scope',
+        summary: 'Fetch scopes granted to a client for an audience',
+        tags: ['Client'],
+        parameters: [
+            new OA\Parameter(
+                name: 'id',
+                description: 'UUID of the client',
+                in: 'path',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uuid')
+            ),
+            new OA\Parameter(
+                name: 'audience',
+                description: 'Protected-resource audience',
+                in: 'query',
+                required: true,
+                schema: new OA\Schema(type: 'string', format: 'uri', maxLength: 3000)
+            )
+        ],
+        responses: [
+            new OA\Response(
+                response: 200,
+                description: 'Scopes fetched successfully',
+                content: new OA\JsonContent(
+                    properties: [
+                        new OA\Property(
+                            property: 'response',
+                            properties: [
+                                new OA\Property(
+                                    property: 'scopes',
+                                    type: 'array',
+                                    items: new OA\Items(type: 'string')
+                                )
+                            ],
+                            type: 'object'
+                        )
+                    ]
+                )
+            ),
+            new OA\Response(response: 400, description: 'Invalid audience'),
+            new OA\Response(response: 404, description: 'Client not found')
+        ]
+    )]
+    #[IsGranted('clients.read')]
+    public function getScopes(
+        #[MapEntity(id: 'id')] Client $client,
+        Request $request,
+    ): Response {
+        $audience = $request->query->getString('audience');
+        $violations = $this->validator->validate($audience, [
+            new Assert\NotBlank(),
+            new Assert\Url(protocols: ['https']),
+            new Assert\Length(min: 1, max: 3000),
+        ]);
+
+        if (count($violations) > 0) {
+            return new JsonResponse([
+                'error' => 'Invalid audience. ' . $violations[0]->getMessage(),
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        return new JsonResponse([
+            'response' => [
+                'scopes' => $this->repository->getScopes($client, $audience),
+            ],
+        ]);
     }
 
     #[Route('/client/{id}', name: 'fetch_client', methods: 'GET')]
@@ -61,6 +136,7 @@ final class ClientController extends AbstractController
             new OA\Response(response: 404, description: 'Client not found')
         ]
     )]
+    #[IsGranted('clients.read')]
     public function fetch(#[MapEntity(id: 'id')] Client $client): Response
     {
         return new JsonResponse([
@@ -97,6 +173,7 @@ final class ClientController extends AbstractController
             new OA\Response(response: 400, description: 'Validation error')
         ]
     )]
+    #[IsGranted('clients.write')]
     public function create(): Response
     {
         $client = new Client();
@@ -130,6 +207,7 @@ final class ClientController extends AbstractController
             new OA\Response(response: 404, description: 'Client not found')
         ]
     )]
+    #[IsGranted('clients.write')]
     public function update(#[MapEntity(id: 'id')] Client $client): Response
     {
         if ($client->getIsSystem()) {
@@ -169,6 +247,7 @@ final class ClientController extends AbstractController
             new OA\Response(response: 404, description: 'Client not found')
         ]
     )]
+    #[IsGranted('clients.delete')]
     public function delete(#[MapEntity(id: 'id')] Client $client): Response
     {
         if ($client->getIsSystem()) {
@@ -212,6 +291,7 @@ final class ClientController extends AbstractController
             new OA\Response(response: 400, description: 'Authentication failed')
         ]
     )]
+    #[IsGranted('clients.auth')]
     public function auth(): Response
     {
         $authRequest = new AuthRequest();

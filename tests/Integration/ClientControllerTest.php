@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Tests\Integration;
 
 use App\DataFixtures\AppFixtures;
+use App\Entity\GroupScope;
 use App\Repository\ClientRepository;
+use App\Repository\GroupRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use sgoranov\IdentityLinkShared\Security\User;
 use Symfony\Bundle\FrameworkBundle\KernelBrowser;
@@ -13,10 +15,55 @@ use Symfony\Component\Routing\RouterInterface;
 
 class ClientControllerTest extends WebTestCase
 {
+    public function testGetScopesForAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $container = $client->getContainer();
+        $router = $container->get(RouterInterface::class);
+        $group = $container->get(GroupRepository::class)
+            ->findOneBy(['name' => AppFixtures::GROUP_NAME]);
+        $clientEntity = $container->get(ClientRepository::class)
+            ->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $groupScope = new GroupScope();
+        $groupScope->setGroup($group);
+        $groupScope->setAudience('https://example.com/orders');
+        $groupScope->setScope('orders:read');
+        $entityManager = $container->get(EntityManagerInterface::class);
+        $entityManager->persist($groupScope);
+        $entityManager->flush();
+
+        $client->request('GET', $router->generate('api_v1_get_client_scopes', [
+            'id' => $clientEntity->getId(),
+            'audience' => 'https://example.com/orders',
+        ]));
+
+        $this->assertResponseIsSuccessful();
+        $this->assertSame(
+            ['orders:read'],
+            json_decode($client->getResponse()->getContent(), true)['response']['scopes']
+        );
+    }
+
+    public function testGetScopesRejectsMissingAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $container = $client->getContainer();
+        $clientEntity = $container->get(ClientRepository::class)
+            ->findOneBy(['name' => AppFixtures::CLIENT_NAME]);
+
+        $client->request('GET', $container->get(RouterInterface::class)->generate(
+            'api_v1_get_client_scopes',
+            ['id' => $clientEntity->getId()]
+        ));
+
+        $this->assertResponseStatusCodeSame(400);
+    }
+
     public function testCreateClientWithMissingBody(): void
     {
         $client = static::createClient();
-        $testUser = new User('test', ['ROLE_ADMIN']);
+        $testUser = new User('test', ['clients.write']);
         $client->loginUser($testUser);
         $router = $client->getContainer()->get(RouterInterface::class);
 
@@ -34,6 +81,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => '',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -55,6 +103,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => '&&%$',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -76,6 +125,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => AppFixtures::CLIENT_NAME,
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -97,6 +147,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -108,7 +159,50 @@ class ClientControllerTest extends WebTestCase
         $this->assertSame(201, $response->getStatusCode());
         $this->assertSame('test',
             json_decode($response->getContent(), true)['response']['client']['name']);
+        $this->assertSame('https://example.com/api',
+            json_decode($response->getContent(), true)['response']['client']['audience']);
         $this->assertFalse(json_decode($response->getContent(), true)['response']['client']['isSystem']);
+    }
+
+    public function testCreateClientWithoutAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_without_audience',
+            'description' => 'client description',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['client_credentials'],
+            'isPublic' => false,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+
+        $this->assertSame(400, $client->getResponse()->getStatusCode());
+        $this->assertSame('Invalid audience. This value should not be blank.',
+            json_decode($client->getResponse()->getContent(), true)['error']);
+    }
+
+    public function testCreateClientWithNonHttpsAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+
+        $content = [
+            'name' => 'test_invalid_audience',
+            'description' => 'client description',
+            'audience' => 'http://example.com/api',
+            'redirectUri' => ['http://localhost/'],
+            'grantTypes' => ['client_credentials'],
+            'isPublic' => false,
+        ];
+
+        $client->request('POST', $router->generate('api_v1_create_client'), [], [], [], json_encode($content));
+
+        $this->assertSame(400, $client->getResponse()->getStatusCode());
+        $this->assertSame('Invalid audience. This value is not a valid URL.',
+            json_decode($client->getResponse()->getContent(), true)['error']);
     }
 
     public function testCreateClientCannotSetSystemFlag(): void
@@ -119,6 +213,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test_system',
             'description' => 'client description',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['password', 'authorization_code', 'client_credentials'],
             'isPublic' => false,
@@ -170,6 +265,28 @@ class ClientControllerTest extends WebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertSame('name_new',
             json_decode($response->getContent(), true)['response']['client']['name']);
+    }
+
+    public function testUpdateClientCannotChangeAudience(): void
+    {
+        $client = $this->createAuthenticatedClient();
+        $router = $client->getContainer()->get(RouterInterface::class);
+        $repository = $client->getContainer()->get(ClientRepository::class);
+        list($entity) = $repository->findBy(['name' => AppFixtures::CLIENT_NAME]);
+        $originalAudience = $entity->getAudience();
+
+        $client->request('PUT', $router->generate('api_v1_update_client', [
+            'id' => $entity->getId()
+        ]), [], [], [], json_encode(['audience' => 'https://changed.example.com/api']));
+        $response = $client->getResponse();
+
+        $this->assertSame(400, $response->getStatusCode());
+        $this->assertStringStartsWith('Extra attributes are not allowed',
+            json_decode($response->getContent(), true)['error']);
+
+        $client->getContainer()->get(EntityManagerInterface::class)->clear();
+        $updatedEntity = $repository->find($entity->getId());
+        $this->assertSame($originalAudience, $updatedEntity->getAudience());
     }
 
     public function testUpdateSystemClientIsForbidden(): void
@@ -271,6 +388,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test_invalid_consent',
             'description' => 'client with invalid consent type',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['authorization_code'],
             'isPublic' => false,
@@ -293,6 +411,7 @@ class ClientControllerTest extends WebTestCase
         $content = [
             'name' => 'test_default_consent',
             'description' => 'client without explicit consent setting',
+            'audience' => 'https://example.com/api',
             'redirectUri' => ['http://localhost/'],
             'grantTypes' => ['authorization_code'],
             'isPublic' => false

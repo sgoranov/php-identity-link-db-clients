@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\Serializer\Context\Normalizer\ObjectNormalizerContextBuilder;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -61,6 +62,7 @@ final class SecretController extends AbstractController
             new OA\Response(response: 404, description: 'Secret not found')
         ]
     )]
+    #[IsGranted('clients.secrets.read')]
     public function fetch(#[MapEntity(id: 'id')] Secret $secret): Response
     {
         return new JsonResponse([
@@ -97,6 +99,7 @@ final class SecretController extends AbstractController
             new OA\Response(response: 400, description: 'Validation error')
         ]
     )]
+    #[IsGranted('clients.secrets.write')]
     public function create(): Response
     {
         $secret = new Secret();
@@ -139,6 +142,7 @@ final class SecretController extends AbstractController
             new OA\Response(response: 404, description: 'Secret not found')
         ]
     )]
+    #[IsGranted('clients.secrets.write')]
     public function update(#[MapEntity(id: 'id')] Secret $secret): Response
     {
         if ($secret->getIsSystem()) {
@@ -177,6 +181,7 @@ final class SecretController extends AbstractController
             new OA\Response(response: 404, description: 'Secret not found')
         ]
     )]
+    #[IsGranted('clients.secrets.delete')]
     public function delete(#[MapEntity(id: 'id')] Secret $secret): Response
     {
         if ($secret->getIsSystem()) {
@@ -241,6 +246,7 @@ final class SecretController extends AbstractController
             new OA\Response(response: 400, description: 'Validation error')
         ]
     )]
+    #[IsGranted('clients.secrets.write')]
     public function issue(): Response
     {
         $secret = new Secret();

@@ -6,6 +6,7 @@ namespace App\DataFixtures;
 use App\Entity\Client;
 use App\Entity\Group;
 use App\Entity\Secret;
+use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\DependencyInjection\Attribute\When;
@@ -29,9 +30,11 @@ class AppFixtures extends Fixture
         $client = new Client();
         $client->setIsPublic(false);
         $client->setDescription('private client');
+        $client->setAudience('https://example.com/api');
         $client->setName(self::CLIENT_NAME);
         $client->setGrantTypes(['client_credentials', 'password', 'authorization_code', 'refresh_token', 'implicit']);
         $client->setRedirectUri(['http://localhost/']);
+        $client->setGroups(new ArrayCollection([$group]));
         $manager->persist($client);
 
         $currentDateTime = new \DateTime();
